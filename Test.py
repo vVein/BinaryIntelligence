@@ -24,5 +24,6 @@ print(numpydata[331][547][2])
 
 img = Image.fromarray(numpydata, 'RGB')
 img.save('my.png')
+
 plt.imshow(img)
 plt.show()
