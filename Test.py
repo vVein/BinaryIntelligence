@@ -2,7 +2,7 @@ from PIL import Image
 from numpy import asarray
 import matplotlib.pyplot as plt
 import numpy as np
-
+import itertools
 
 # load the image and convert into
 # numpy array
@@ -27,3 +27,10 @@ img.save('my.png')
 
 plt.imshow(img)
 plt.show()
+
+list1 = [[15,3],[18,6],[7,82],[18,6]]
+list1.sort()
+stripped = list(list1 for list1,_ in itertools.groupby(list1))
+
+print(list1)
+print(stripped)

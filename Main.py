@@ -8,4 +8,3 @@ import itertools
   
 img = Image.open(r'C:\Users\Stude\OneDrive\Pictures\Image-Analysis\Shapes.jpg')
 numpydata = asarray(img)
-  
