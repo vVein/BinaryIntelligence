@@ -125,7 +125,7 @@ edges.sort()
 list(edges for edges,_ in itertools.groupby(edges))
 print(edges)
 
-plt.scatter(*zip(*edges),marker='o', s=0.01)
+plt.scatter(*zip(*edges),marker='.', s=0.01)
 plt.gca().invert_yaxis()
 plt.show()
 
