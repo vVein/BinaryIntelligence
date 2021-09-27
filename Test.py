@@ -32,5 +32,8 @@ list1 = [[15,3],[18,6],[7,82],[18,6]]
 list1.sort()
 stripped = list(list1 for list1,_ in itertools.groupby(list1))
 
+circular_pattern = [[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1]]
+
 print(list1)
 print(stripped)
+print(circular_pattern[3])
