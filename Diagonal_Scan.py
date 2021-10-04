@@ -13,13 +13,19 @@ img_height = int(len(numpydata))
 edges = []
 tolerance = 30
 
-for y in range(img_height):
+for x_start in range(img_width):
     previous_added = 0
-    for x in range(img_width):
-        if x == 0:
+    for x in range(x_start,img_width):
+        if x == x_start:
+            y = 0
             current_pixel = numpydata[y][x]
             continue
+
         previous_pixel = current_pixel
+        y = y + 1
+        if y > img_height-1:
+            break
+
         current_pixel = numpydata[y][x]
         comparison1 = abs(int(current_pixel[0]) - int(previous_pixel[0])) < tolerance
         comparison2 = abs(int(current_pixel[1]) - int(previous_pixel[1])) < tolerance
@@ -32,13 +38,20 @@ for y in range(img_height):
         elif previous_added > 0:
             previous_added = previous_added - 1
 
-for x in range(img_width):
+for y_start in range(img_height):
     previous_added = 0
-    for y in range(img_height):
-        if y == 0:
+
+    for y in range(y_start,img_width):
+        if y == y_start:
+            x = 0
             current_pixel = numpydata[y][x]
             continue
+
         previous_pixel = current_pixel
+        x = x + 1
+        if x > img_width-1 or y > img_height-1:
+            break
+
         current_pixel = numpydata[y][x]
         comparison1 = abs(int(current_pixel[0]) - int(previous_pixel[0])) < tolerance
         comparison2 = abs(int(current_pixel[1]) - int(previous_pixel[1])) < tolerance
