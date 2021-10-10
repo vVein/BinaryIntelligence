@@ -57,11 +57,11 @@ for x in range(img_width):
 edges.sort()
 edges_unique = list(edges for edges,_ in itertools.groupby(edges))
 
-x_cords, y_cords = zip(*edges)
-plt.scatter(*zip(*edges),marker='.', s=0.1)
-plt.scatter(x_cords,y_cords,marker='.', s=0.5)
-plt.gca().invert_yaxis()
-plt.show()
+#x_cords, y_cords = zip(*edges)
+#plt.scatter(*zip(*edges),marker='.', s=0.1)
+#plt.scatter(x_cords,y_cords,marker='.', s=0.5)
+#plt.gca().invert_yaxis()
+#plt.show()
 lines = []
 used = []
 index_rotation = [0,1,-1,2,-2,3,-3]
@@ -114,10 +114,51 @@ for xy in edges:
 
             lines.append([shape_no, current_shape])
 
-for line in lines:
-    if len(line[1])>3:
-        x, y = map(list, zip(*line[1]))
-        plt.plot(x, y, label = "line {}".format(line[0]) )
-plt.gca().invert_yaxis()
-plt.show()
+# for line in lines:
+#    if len(line[1]) > 3:
+#        x, y = map(list, zip(*line[1]))
+#        plt.plot(x, y, label = "line {}".format(line[0]) )
+# plt.gca().invert_yaxis()
+# plt.show()
 
+terminus_points = []
+
+for line in lines:
+    if len(line[1]) > 3:
+        end_index = len(line[1]) - 1
+        begin_point = line[1][0]
+        end_point = line[1][end_index]
+        # Remove complete loops, probable shapes
+        if begin_point == end_point:
+            continue
+        # Locate other end points in close proximity
+        # Should eventually locate all line points, not just end points
+        terminus_points.append([line[0], begin_point])
+        terminus_points.append([line[0], end_point])
+
+lines_to_be_combined = []
+flagged = []
+for terminus in terminus_points:
+    if terminus not in flagged:
+        terminus_xy = terminus[1]
+        for termini in terminus_points:
+            x_delta = abs(terminus_xy[0] - termini[1][0])
+            y_delta = abs(terminus_xy[1] - termini[1][1])
+            if x_delta + y_delta < 3:
+                lines_to_be_combined.append([terminus, termini])
+                flagged.append(terminus)
+                flagged.append(termini)
+
+for entries in lines_to_be_combined:
+
+    leading_xy = entries[0][1]
+
+    leading_line_no = entries[0][0]
+    leading_line_index = leading_line_no - 1
+    leading_line = lines[leading_line_index][1]
+
+    print(leading_line[0])
+    for index in range(shape_no):
+        #print(lines[index])
+        i = 1
+    

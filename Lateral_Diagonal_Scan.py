@@ -13,6 +13,47 @@ img_height = int(len(numpydata))
 edges = []
 tolerance = 30
 
+for y in range(img_height):
+    previous_added = 0
+    for x in range(img_width):
+        if x == 0:
+            current_pixel = numpydata[y][x]
+            continue
+        previous_pixel = current_pixel
+        current_pixel = numpydata[y][x]
+        comparison1 = abs(int(current_pixel[0]) - int(previous_pixel[0])) < tolerance
+        comparison2 = abs(int(current_pixel[1]) - int(previous_pixel[1])) < tolerance
+        comparison3 = abs(int(current_pixel[2]) - int(previous_pixel[2])) < tolerance
+        comparison = [comparison1,comparison2,comparison3]
+        equal_arrays = all(comparison)
+        if not equal_arrays and previous_added == 0:
+            edges.append([x, y])
+            previous_added = 2
+        elif previous_added > 0:
+            previous_added = previous_added - 1
+
+for x in range(img_width):
+    previous_added = 0
+    for y in range(img_height):
+        if y == 0:
+            current_pixel = numpydata[y][x]
+            continue
+        previous_pixel = current_pixel
+        current_pixel = numpydata[y][x]
+        comparison1 = abs(int(current_pixel[0]) - int(previous_pixel[0])) < tolerance
+        comparison2 = abs(int(current_pixel[1]) - int(previous_pixel[1])) < tolerance
+        comparison3 = abs(int(current_pixel[2]) - int(previous_pixel[2])) < tolerance
+        comparison = [comparison1,comparison2,comparison3]
+        equal_arrays = all(comparison)
+        if not equal_arrays and previous_added == 0:
+            prior_pixel = [x,y-1]
+            ahead_pixel = [x,y+1]
+            if prior_pixel and ahead_pixel not in edges:
+                edges.append([x, y])
+            previous_added = 2
+        elif previous_added > 0:
+            previous_added = previous_added - 1
+
 for x_start in range(img_width):
     previous_added = 0
     for x in range(x_start,img_width):
@@ -33,7 +74,10 @@ for x_start in range(img_width):
         comparison = [comparison1,comparison2,comparison3]
         equal_arrays = all(comparison)
         if not equal_arrays and previous_added == 0:
-            edges.append([x, y])
+            prior_pixel = [x-1,y-1]
+            ahead_pixel = [x+1,y+1]
+            if prior_pixel and ahead_pixel not in edges:
+                edges.append([x, y])
             previous_added = 2
         elif previous_added > 0:
             previous_added = previous_added - 1
@@ -59,7 +103,10 @@ for y_start in range(img_height):
         comparison = [comparison1,comparison2,comparison3]
         equal_arrays = all(comparison)
         if not equal_arrays and previous_added == 0:
-            edges.append([x, y])
+            prior_pixel = [x-1,y-1]
+            ahead_pixel = [x+1,y+1]
+            if prior_pixel and ahead_pixel not in edges:
+                edges.append([x, y])
             previous_added = 2
         elif previous_added > 0:
             previous_added = previous_added - 1
