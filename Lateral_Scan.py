@@ -144,21 +144,38 @@ for terminus in terminus_points:
         for termini in terminus_points:
             x_delta = abs(terminus_xy[0] - termini[1][0])
             y_delta = abs(terminus_xy[1] - termini[1][1])
-            if x_delta + y_delta < 3:
+            if x_delta < 3 and y_delta < 3 and x_delta + y_delta != 0:
                 lines_to_be_combined.append([terminus, termini])
                 flagged.append(terminus)
                 flagged.append(termini)
 
+lines_to_be_removed = []
 for entries in lines_to_be_combined:
 
-    leading_xy = entries[0][1]
+    first_xy = entries[0][1]
+    print(entries)
+    first_line_no = entries[0][0]
+    first_line_index = first_line_no - 1
+    first_line = lines[first_line_index][1]
+    second_xy = entries[1][1]
+    second_line_no = entries[1][0]
+    second_line_index = second_line_no - 1
+    second_line = lines[second_line_index][1]
 
-    leading_line_no = entries[0][0]
-    leading_line_index = leading_line_no - 1
-    leading_line = lines[leading_line_index][1]
+    if first_xy == first_line[0]:
+        # tie_point 1 is at the front of the leading line
+        print('front')
+        if second_xy == second_line[0]:
+            print('- front')
+            print(lines[first_line_index][1])
+            replacement = second_line[::-1] + first_line
+            lines[first_line_index][1] = replacement
+            print(lines[first_line_index][1])
+            lines_to_be_removed.append(second_line_index)
+        elif second_xy == second_line[-1]:
+            print('- back')
 
-    print(leading_line[0])
-    for index in range(shape_no):
-        #print(lines[index])
-        i = 1
+    elif first_xy == first_line[-1]:
+        print('back')
+
     

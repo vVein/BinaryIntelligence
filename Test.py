@@ -25,8 +25,8 @@ print(numpydata[331][547][2])
 img = Image.fromarray(numpydata, 'RGB')
 img.save('my.png')
 
-plt.imshow(img)
-plt.show()
+#plt.imshow(img)
+#plt.show()
 
 list1 = [[15,3],[18,6],[7,82],[18,6]]
 list1.sort()
@@ -37,3 +37,12 @@ circular_pattern = [[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1]]
 print(list1)
 print(stripped)
 print(circular_pattern[3])
+
+tree = [[0, '(2,4)'], [1, '(1,2)'], [1, '(7,2)']]
+print(tree[0][1], tree[1][1], tree[2][1] )
+print(tree[0][1][1],tree[1][1][1])
+
+sub_tree = [2]
+sub_tree.append([4,2])
+sub_tree.append([7,6])
+print(sub_tree)
