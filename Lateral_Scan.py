@@ -57,11 +57,11 @@ for x in range(img_width):
 edges.sort()
 edges_unique = list(edges for edges,_ in itertools.groupby(edges))
 
-#x_cords, y_cords = zip(*edges)
-#plt.scatter(*zip(*edges),marker='.', s=0.1)
-#plt.scatter(x_cords,y_cords,marker='.', s=0.5)
-#plt.gca().invert_yaxis()
-#plt.show()
+x_cords, y_cords = zip(*edges)
+plt.scatter(*zip(*edges),marker='.', s=0.1)
+plt.scatter(x_cords,y_cords,marker='.', s=0.5)
+plt.gca().invert_yaxis()
+plt.show()
 lines = []
 used = []
 index_rotation = [0,1,-1,2,-2,3,-3]
@@ -114,12 +114,12 @@ for xy in edges:
 
             lines.append([shape_no, current_shape])
 
-# for line in lines:
-#    if len(line[1]) > 3:
-#        x, y = map(list, zip(*line[1]))
-#        plt.plot(x, y, label = "line {}".format(line[0]) )
-# plt.gca().invert_yaxis()
-# plt.show()
+for line in lines:
+    if len(line[1]) > 3:
+        x, y = map(list, zip(*line[1]))
+        plt.plot(x, y, label = "line {}".format(line[0]) )
+plt.gca().invert_yaxis()
+plt.show()
 
 terminus_points = []
 
@@ -153,7 +153,6 @@ lines_to_be_removed = []
 for entries in lines_to_be_combined:
 
     first_xy = entries[0][1]
-    print(entries)
     first_line_no = entries[0][0]
     first_line_index = first_line_no - 1
     first_line = lines[first_line_index][1]
@@ -162,20 +161,34 @@ for entries in lines_to_be_combined:
     second_line_index = second_line_no - 1
     second_line = lines[second_line_index][1]
 
+    if first_line_no == second_line_no:
+        continue
+
     if first_xy == first_line[0]:
-        # tie_point 1 is at the front of the leading line
-        print('front')
         if second_xy == second_line[0]:
-            print('- front')
-            print(lines[first_line_index][1])
             replacement = second_line[::-1] + first_line
             lines[first_line_index][1] = replacement
-            print(lines[first_line_index][1])
             lines_to_be_removed.append(second_line_index)
         elif second_xy == second_line[-1]:
-            print('- back')
-
+            replacement = second_line + first_line
+            lines[first_line_index][1] = replacement
+            lines_to_be_removed.append(second_line_index)
     elif first_xy == first_line[-1]:
-        print('back')
+        if second_xy == second_line[0]:
+            replacement = first_line + second_line
+            lines[first_line_index][1] = replacement
+            lines_to_be_removed.append(second_line_index)
+        elif second_xy == second_line[-1]:
+            replacement = first_line + second_line[::-1]
+            lines[first_line_index][1] = replacement
+            lines_to_be_removed.append(second_line_index)
 
-    
+for line_index in reversed(lines_to_be_removed):
+    a = lines.pop(line_index)
+
+for line in lines:
+    if len(line[1]) > 3:
+        x, y = map(list, zip(*line[1]))
+        plt.plot(x, y, label = "line {}".format(line[0]) )
+plt.gca().invert_yaxis()
+plt.show()
