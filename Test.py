@@ -25,8 +25,8 @@ print(numpydata[331][547][2])
 img = Image.fromarray(numpydata, 'RGB')
 img.save('my.png')
 
-#plt.imshow(img)
-#plt.show()
+plt.imshow(img)
+plt.show()
 
 list1 = [[15,3],[18,6],[7,82],[18,6]]
 list1.sort()

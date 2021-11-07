@@ -33,7 +33,7 @@ for y in range(img_height):
         current_pixel = numpydata[y][x]
         different_colour = pixel_comparison(current_pixel, previous_pixel)
         if different_colour and previous_added == 0:
-            edges_lat.append([x, y])
+            edges_lat.append([x, y, [previous_pixel[0], previous_pixel[1], previous_pixel[2]], [current_pixel[0], current_pixel[1], current_pixel[2]]])
             previous_added = 2
         elif previous_added > 0:
             previous_added = previous_added - 1
@@ -49,7 +49,7 @@ for x in range(img_width):
         current_pixel = numpydata[y][x]
         different_colour = pixel_comparison(current_pixel, previous_pixel)
         if different_colour and previous_added == 0:
-            edges_lat.append([x, y])
+            edges_lat.append([x, y, [previous_pixel[0], previous_pixel[1], previous_pixel[2]], [current_pixel[0], current_pixel[1], current_pixel[2]]])
             previous_added = 2
         elif previous_added > 0:
             previous_added = previous_added - 1
@@ -65,7 +65,7 @@ for y in range(img_height):
         current_pixel = numpydata[y][x]
         different_colour = pixel_comparison(current_pixel, previous_pixel)
         if different_colour and previous_added == 0:
-            edges_rev_lat.append([x, y])
+            edges_rev_lat.append([x, y, [previous_pixel[0], previous_pixel[1], previous_pixel[2]], [current_pixel[0], current_pixel[1], current_pixel[2]]])
             previous_added = 2
         elif previous_added > 0:
             previous_added = previous_added - 1
@@ -81,7 +81,7 @@ for x in range(img_width):
         current_pixel = numpydata[y][x]
         different_colour = pixel_comparison(current_pixel, previous_pixel)
         if different_colour and previous_added == 0:
-            edges_rev_lat.append([x, y])
+            edges_rev_lat.append([x, y, [previous_pixel[0], previous_pixel[1], previous_pixel[2]], [current_pixel[0], current_pixel[1], current_pixel[2]]])
             previous_added = 2
         elif previous_added > 0:
             previous_added = previous_added - 1
@@ -103,7 +103,7 @@ for x_start in range(img_width):
         current_pixel = numpydata[y][x]
         different_colour = pixel_comparison(current_pixel, previous_pixel)
         if different_colour and previous_added == 0:
-            edges_diag.append([x, y])
+            edges_diag.append([x, y, [previous_pixel[0], previous_pixel[1], previous_pixel[2]], [current_pixel[0], current_pixel[1], current_pixel[2]]])
             previous_added = 2
         elif previous_added > 0:
             previous_added = previous_added - 1
@@ -126,7 +126,7 @@ for y_start in range(img_height):
         current_pixel = numpydata[y][x]
         different_colour = pixel_comparison(current_pixel, previous_pixel)
         if different_colour and previous_added == 0:
-            edges_diag.append([x, y])
+            edges_diag.append([x, y, [previous_pixel[0], previous_pixel[1], previous_pixel[2]], [current_pixel[0], current_pixel[1], current_pixel[2]]])
             previous_added = 2
         elif previous_added > 0:
             previous_added = previous_added - 1
@@ -148,7 +148,7 @@ for x_start in range(img_width-1, 0, -1):
         current_pixel = numpydata[y][x]
         different_colour = pixel_comparison(current_pixel, previous_pixel)
         if different_colour and previous_added == 0:
-            edges_diag.append([x, y])
+            edges_diag.append([x, y, [previous_pixel[0], previous_pixel[1], previous_pixel[2]], [current_pixel[0], current_pixel[1], current_pixel[2]]])
             previous_added = 2
         elif previous_added > 0:
             previous_added = previous_added - 1
@@ -171,10 +171,7 @@ for y_start in range(img_height - 1, 0, -1):
         current_pixel = numpydata[y][x]
         different_colour = pixel_comparison(current_pixel, previous_pixel)
         if different_colour and previous_added == 0:
-            prior_pixel = [x + 1, y - 1]
-            ahead_pixel = [x - 1, y + 1]
-            if prior_pixel and ahead_pixel not in edges_diag:
-                edges_diag.append([x, y])
+            edges_diag.append([x, y, [previous_pixel[0], previous_pixel[1], previous_pixel[2]], [current_pixel[0], current_pixel[1], current_pixel[2]]])
         elif previous_added > 0:
             previous_added = previous_added - 1
 
@@ -182,23 +179,33 @@ edges_prio_1 = []
 edges_prio_2 = []
 edges_prio_3 = []
 
+edges_diag_ch = [e[:2] for e in edges_diag]
+edges_rev_lat_ch = [e[0:2] for e in edges_rev_lat]
+edges_lat_ch = [e[:2] for e in edges_lat]
+
 for edge in edges_lat:
-    if edge in edges_diag and edge in edges_rev_lat:
+    edge_co = edge[0:2]
+    if edge_co in edges_diag_ch and edge_co in edges_rev_lat_ch:
         edges_prio_1.append(edge)
-    elif edge in edges_diag or edge in edges_rev_lat:
-        edges_prio_2.append(edge)
-    else:
-        edges_prio_3.append(edge)
-for edge in edges_diag:
-    if edge in edges_lat and edge in edges_rev_lat:
-        continue
-    elif edge in edges_lat or edge in edges_rev_lat:
+    elif edge_co in edges_diag_ch or edge_co in edges_rev_lat_ch:
         edges_prio_2.append(edge)
     else:
         edges_prio_3.append(edge)
 
+for edge in edges_diag:
+    if edge_co in edges_lat_ch and edge_co in edges_rev_lat_ch:
+        continue
+    elif edge_co in edges_lat_ch or edge_co in edges_rev_lat_ch:
+        edges_prio_2.append(edge)
+    else:
+        edges_prio_3.append(edge)
+
+edges_prio_1_ch = [e[:2] for e in edges_prio_1]
+edges_prio_2_ch = [e[:2] for e in edges_prio_2]
+
 for edge in edges_rev_lat:
-    if edge not in edges_prio_1 and edge not in edges_prio_2:
+    edge_co = edge[0:2]
+    if edge_co not in edges_prio_1_ch and edge_co not in edges_prio_2_ch:
         edges_prio_3.append(edge)
 
 edges_prio_1.sort()
@@ -208,15 +215,18 @@ edges_unique_1 = list(edges_prio_1 for edges_prio_1,_ in itertools.groupby(edges
 edges_unique_2 = list(edges_prio_2 for edges_prio_2,_ in itertools.groupby(edges_prio_2))
 edges_unique_3 = list(edges_prio_3 for edges_prio_3,_ in itertools.groupby(edges_prio_3))
 
+edges_prio_1_xy = [e[:2] for e in edges_prio_1]
+edges_prio_2_xy = [e[:2] for e in edges_prio_2]
+edges_prio_3_xy = [e[:2] for e in edges_prio_3]
 
-x_cords_3, y_cords_3 = zip(*edges_prio_3)
-plt.scatter(*zip(*edges_prio_3),marker='.', s=0.1, color='green')
+x_cords_3, y_cords_3 = zip(*edges_prio_3_xy)
+plt.scatter(*zip(*edges_prio_3_xy),marker='.', s=0.1, color='green')
 plt.scatter(x_cords_3, y_cords_3, marker='.', s=0.5, color='green')
-x_cords_2, y_cords_2 = zip(*edges_prio_2)
-plt.scatter(*zip(*edges_prio_2),marker='.', s=0.1, color='blue')
+x_cords_2, y_cords_2 = zip(*edges_prio_2_xy)
+plt.scatter(*zip(*edges_prio_2_xy),marker='.', s=0.1, color='blue')
 plt.scatter(x_cords_2,y_cords_2,marker='.', s=0.5, color='blue')
-x_cords, y_cords = zip(*edges_prio_1)
-plt.scatter(*zip(*edges_prio_1),marker='.', s=0.1, color='red')
+x_cords, y_cords = zip(*edges_prio_1_xy)
+plt.scatter(*zip(*edges_prio_1_xy),marker='.', s=0.1, color='red')
 plt.scatter(x_cords,y_cords,marker='.', s=0.5, color='red')
 plt.gca().invert_yaxis()
 plt.legend()
@@ -228,12 +238,28 @@ index_rotation = [0, 1, -1, 2, -2, 3, -3]
 index_cap = len(index_rotation) + 1
 
 shape_no = 0
-for xy in edges_prio_1:
+for edge in edges_prio_1:
+    xy = edge[:2]
     if xy not in used:
         new_shape = False
         circular_pattern = [[0,-1], [1,-1], [1,0], [1,1], [0,1], [-1,1], [-1,0], [-1,-1]]
         prev_dirct_index = 0
         start_point = xy
+
+        for dirct_index, dirct in enumerate(circular_pattern):
+            xy_n = [xy[0] + dirct[0], xy[1] + dirct[1]]
+            if xy_n in edges_prio_1 or edges_prio_2 :
+                current_shape = []
+                shape_no = shape_no + 1
+                current_shape.append([xy[0],xy[1]])
+                current_shape.append([xy_n[0],xy_n[1]])
+                used.append([xy[0],xy[1]])
+                used.append([xy_n[0],xy_n[1]])
+                prev_dirct = dirct
+                new_shape = True  
+                prev_dirct_index = dirct_index
+                break
+
         for dirct_index, dirct in enumerate(circular_pattern):
             xy_n = [xy[0] + dirct[0], xy[1] + dirct[1]]
             if xy_n in edges_prio_1 or edges_prio_2 :
@@ -249,7 +275,28 @@ for xy in edges_prio_1:
                 break
 
         if new_shape:
-            possibilities = 14
+            colour_match_chances = 5
+            prio_possibilities = 7
+            while colour_match_chances > 1:
+                colour_match_chances = colour_match_chances - 1
+                xy = xy_n
+                for index_adj in index_rotation[:5]:
+                    test_index = ( prev_dirct_index + index_adj ) % index_cap
+                    new_dirct = circular_pattern[test_index]
+                    xy_n = [xy[0] + new_dirct[0], xy[1] + new_dirct[1]]
+
+                    if xy_n == start_point:
+                        current_shape.append(xy_n)
+                        possibilities = 0
+                        break
+
+                    elif xy_n in edges_prio_1 and xy_n not in used:
+                        used.append(xy_n)
+                        current_shape.append(xy_n)
+                        prev_dirct_index = test_index
+                        possibilities = 14
+                        break  
+
             while possibilities > 1:
                 possibilities = possibilities - 1
                 xy = xy_n
@@ -269,9 +316,6 @@ for xy in edges_prio_1:
                         prev_dirct_index = test_index
                         possibilities = 14
                         break
-
-                
-
             lines.append([shape_no, current_shape])
 
 for line in lines:
