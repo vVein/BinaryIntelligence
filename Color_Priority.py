@@ -19,7 +19,7 @@ def pixel_comparison(current_pixel, previous_pixel):
     comparison1 = abs(int(current_pixel[0]) - int(previous_pixel[0]))
     comparison2 = abs(int(current_pixel[1]) - int(previous_pixel[1]))
     comparison3 = abs(int(current_pixel[2]) - int(previous_pixel[2]))
-    comparison = (comparison1 + comparison2 + comparison3 ) > tolerance
+    comparison = (comparison1 + comparison2 + comparison3) > tolerance
     return comparison
 
 # Lateral scan (Left ro right)
@@ -219,18 +219,18 @@ edges_prio_1_xy = [e[:2] for e in edges_prio_1]
 edges_prio_2_xy = [e[:2] for e in edges_prio_2]
 edges_prio_3_xy = [e[:2] for e in edges_prio_3]
 
-x_cords_3, y_cords_3 = zip(*edges_prio_3_xy)
-plt.scatter(*zip(*edges_prio_3_xy),marker='.', s=0.1, color='green')
-plt.scatter(x_cords_3, y_cords_3, marker='.', s=0.5, color='green')
-x_cords_2, y_cords_2 = zip(*edges_prio_2_xy)
-plt.scatter(*zip(*edges_prio_2_xy),marker='.', s=0.1, color='blue')
-plt.scatter(x_cords_2,y_cords_2,marker='.', s=0.5, color='blue')
-x_cords, y_cords = zip(*edges_prio_1_xy)
-plt.scatter(*zip(*edges_prio_1_xy),marker='.', s=0.1, color='red')
-plt.scatter(x_cords,y_cords,marker='.', s=0.5, color='red')
-plt.gca().invert_yaxis()
-plt.legend()
-plt.show()
+#x_cords_3, y_cords_3 = zip(*edges_prio_3_xy)
+#plt.scatter(*zip(*edges_prio_3_xy),marker='.', s=0.1, color='green')
+#plt.scatter(x_cords_3, y_cords_3, marker='.', s=0.5, color='green')
+#x_cords_2, y_cords_2 = zip(*edges_prio_2_xy)
+#plt.scatter(*zip(*edges_prio_2_xy),marker='.', s=0.1, color='blue')
+#plt.scatter(x_cords_2,y_cords_2,marker='.', s=0.5, color='blue')
+#x_cords, y_cords = zip(*edges_prio_1_xy)
+#plt.scatter(*zip(*edges_prio_1_xy),marker='.', s=0.1, color='red')
+#plt.scatter(x_cords,y_cords,marker='.', s=0.5, color='red')
+#plt.gca().invert_yaxis()
+#plt.legend()
+#plt.show()
 
 lines = []
 used = []
@@ -248,74 +248,108 @@ for edge in edges_prio_1:
 
         for dirct_index, dirct in enumerate(circular_pattern):
             xy_n = [xy[0] + dirct[0], xy[1] + dirct[1]]
-            if xy_n in edges_prio_1 or edges_prio_2 :
-                current_shape = []
-                shape_no = shape_no + 1
-                current_shape.append([xy[0],xy[1]])
-                current_shape.append([xy_n[0],xy_n[1]])
-                used.append([xy[0],xy[1]])
-                used.append([xy_n[0],xy_n[1]])
-                prev_dirct = dirct
-                new_shape = True  
-                prev_dirct_index = dirct_index
-                break
-
-        for dirct_index, dirct in enumerate(circular_pattern):
-            xy_n = [xy[0] + dirct[0], xy[1] + dirct[1]]
-            if xy_n in edges_prio_1 or edges_prio_2 :
-                current_shape = []
-                shape_no = shape_no + 1
-                current_shape.append([xy[0],xy[1]])
-                current_shape.append([xy_n[0],xy_n[1]])
-                used.append([xy[0],xy[1]])
-                used.append([xy_n[0],xy_n[1]])
-                prev_dirct = dirct
-                new_shape = True  
-                prev_dirct_index = dirct_index
-                break
-
+            if xy_n in edges_prio_1_xy :
+                edge_n = [e for e in edges_prio_1 if e[:2] == xy_n]
+                if edge[2:5] and edge[5:] in [edge_n[2:5], edge_n[5:]]:
+                    current_shape = []
+                    shape_no = shape_no + 1
+                    current_shape.append([xy[0], xy[1]])
+                    current_shape.append([xy_n[0], xy_n[1]])
+                    used.append([xy[0], xy[1]])
+                    used.append([xy_n[0], xy_n[1]])
+                    prev_dirct = dirct
+                    new_shape = True  
+                    prev_dirct_index = dirct_index
+                    last_stored_xy = xy_n
+                    break
+        
+        if not new_shape:
+            for dirct_index, dirct in enumerate(circular_pattern):
+                xy_n = [xy[0] + dirct[0], xy[1] + dirct[1]]
+                if xy_n in edges_prio_1_xy or edges_prio_2_xy :
+                    current_shape = []
+                    shape_no = shape_no + 1
+                    current_shape.append(xy)
+                    current_shape.append(xy_n)
+                    used.append(xy)
+                    used.append(xy_n)
+                    prev_dirct = dirct
+                    new_shape = True  
+                    prev_dirct_index = dirct_index
+                    last_stored_xy = xy_n
+                    break
+        
         if new_shape:
-            colour_match_chances = 5
-            prio_possibilities = 7
-            while colour_match_chances > 1:
-                colour_match_chances = colour_match_chances - 1
-                xy = xy_n
+            possibilities = 5
+            colour_break = False
+            while possibilities >= 1:
+                possibilities = possibilities - 1
+                xy = last_stored_xy
                 for index_adj in index_rotation[:5]:
                     test_index = ( prev_dirct_index + index_adj ) % index_cap
                     new_dirct = circular_pattern[test_index]
                     xy_n = [xy[0] + new_dirct[0], xy[1] + new_dirct[1]]
+                    edge = [e for e in edges_prio_1 if e[:2] == xy]
+                    edge_n = [e for e in edges_prio_1 if e[:2] == xy_n]
 
                     if xy_n == start_point:
                         current_shape.append(xy_n)
                         possibilities = 0
+                        colour_break = True
                         break
-
-                    elif xy_n in edges_prio_1 and xy_n not in used:
+                    
+                    elif edge[2:5] and edge[5:] in [edge_n[2:5], edge_n[5:]]:
                         used.append(xy_n)
                         current_shape.append(xy_n)
+                        last_stored_xy = xy_n
                         prev_dirct_index = test_index
-                        possibilities = 14
-                        break  
-
-            while possibilities > 1:
-                possibilities = possibilities - 1
-                xy = xy_n
-                for index_adj in index_rotation:
-                    test_index = ( prev_dirct_index + index_adj ) % index_cap
-                    new_dirct = circular_pattern[test_index]
-                    xy_n = [xy[0] + new_dirct[0], xy[1] + new_dirct[1]]
-
-                    if xy_n == start_point:
-                        current_shape.append(xy_n)
-                        possibilities = 0
+                        possibilities = 5
                         break
+                    
+                if not colour_break and possibilities == 1:
+                    possibilities = 7
+                    while possibilities >= 1:
+                        possibilities = possibilities - 1
+                        xy = last_stored_xy
+                        for index_adj in index_rotation:
+                            test_index = ( prev_dirct_index + index_adj ) % index_cap
+                            new_dirct = circular_pattern[test_index]
+                            xy_n = [xy[0] + new_dirct[0], xy[1] + new_dirct[1]]
 
-                    elif xy_n in edges_prio_1 and xy_n not in used:
-                        used.append(xy_n)
-                        current_shape.append(xy_n)
-                        prev_dirct_index = test_index
-                        possibilities = 14
-                        break
+                            if xy_n == start_point:
+                                current_shape.append(xy_n)
+                                possibilities = 0
+                                break
+
+                            elif xy_n in edges_prio_1_xy and xy_n not in used:
+                                used.append(xy_n)
+                                current_shape.append(xy_n)
+                                prev_dirct_index = test_index
+                                possibilities = 7
+                                break
+                            
+                        if possibilities == 1:
+                            possibilities = 7
+                            while possibilities >= 1:
+                                possibilities = possibilities - 1
+                                xy = last_stored_xy
+                                for index_adj in index_rotation:
+                                    test_index = ( prev_dirct_index + index_adj ) % index_cap
+                                    new_dirct = circular_pattern[test_index]
+                                    xy_n = [xy[0] + new_dirct[0], xy[1] + new_dirct[1]]
+
+                                    if xy_n == start_point:
+                                        current_shape.append(xy_n)
+                                        possibilities = 0
+                                        break
+
+                                    elif xy_n in edges_prio_2_xy and xy_n not in used:
+                                        used.append(xy_n)
+                                        current_shape.append(xy_n)
+                                        prev_dirct_index = test_index
+                                        possibilities = 7
+                                        break
+            
             lines.append([shape_no, current_shape])
 
 for line in lines:
