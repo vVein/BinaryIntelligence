@@ -4,6 +4,7 @@ from numpy import asarray
 import matplotlib.pyplot as plt
 import numpy as np
 import itertools
+from Colour_functions import *
 
 img = Image.open(r'C:\Users\Stude\OneDrive\Pictures\Image-Analysis\Shapes.jpg')
 numpydata = asarray(img)
@@ -13,18 +14,9 @@ img_height = int(len(numpydata))
 edges_lat = []
 edges_rev_lat = []
 edges_diag = []
-tolerance = 140
-
-def pixel_comparison(current_pixel, previous_pixel):
-    comparison1 = abs(int(current_pixel[0]) - int(previous_pixel[0]))
-    comparison2 = abs(int(current_pixel[1]) - int(previous_pixel[1]))
-    comparison3 = abs(int(current_pixel[2]) - int(previous_pixel[2]))
-    comparison = (comparison1 + comparison2 + comparison3) > tolerance
-    return comparison
 
 # Lateral scan (Left ro right)
 for y in range(img_height):
-    previous_added = 0
     for x in range(img_width):
         if x == 0:
             current_pixel = numpydata[y][x]
@@ -32,15 +24,11 @@ for y in range(img_height):
         previous_pixel = current_pixel
         current_pixel = numpydata[y][x]
         different_colour = pixel_comparison(current_pixel, previous_pixel)
-        if different_colour and previous_added == 0:
-            edges_lat.append([x, y, [previous_pixel[0], previous_pixel[1], previous_pixel[2]], [current_pixel[0], current_pixel[1], current_pixel[2]]])
-            previous_added = 2
-        elif previous_added > 0:
-            previous_added = previous_added - 1
+        if different_colour:
+            edges_lat.append([x, y])
 
 # Lateral scan (Top to bottom)
 for x in range(img_width):
-    previous_added = 0
     for y in range(img_height):
         if y == 0:
             current_pixel = numpydata[y][x]
@@ -48,15 +36,11 @@ for x in range(img_width):
         previous_pixel = current_pixel
         current_pixel = numpydata[y][x]
         different_colour = pixel_comparison(current_pixel, previous_pixel)
-        if different_colour and previous_added == 0:
-            edges_lat.append([x, y, [previous_pixel[0], previous_pixel[1], previous_pixel[2]], [current_pixel[0], current_pixel[1], current_pixel[2]]])
-            previous_added = 2
-        elif previous_added > 0:
-            previous_added = previous_added - 1
+        if different_colour:
+            edges_lat.append([x, y])
 
 # Reverse Lateral scan (Right to left)
 for y in range(img_height):
-    previous_added = 0
     for x in range(img_width - 1, 0, -1):
         if x == img_width - 1:
             current_pixel = numpydata[y][x]
@@ -64,15 +48,11 @@ for y in range(img_height):
         previous_pixel = current_pixel
         current_pixel = numpydata[y][x]
         different_colour = pixel_comparison(current_pixel, previous_pixel)
-        if different_colour and previous_added == 0:
-            edges_rev_lat.append([x, y, [previous_pixel[0], previous_pixel[1], previous_pixel[2]], [current_pixel[0], current_pixel[1], current_pixel[2]]])
-            previous_added = 2
-        elif previous_added > 0:
-            previous_added = previous_added - 1
+        if different_colour:
+            edges_rev_lat.append([x, y])
 
 # Reverse Lateral scan (Bottom to top)
 for x in range(img_width):
-    previous_added = 0
     for y in range(img_height - 1, 0, -1):
         if y == img_height - 1:
             current_pixel = numpydata[y][x]
@@ -80,15 +60,11 @@ for x in range(img_width):
         previous_pixel = current_pixel
         current_pixel = numpydata[y][x]
         different_colour = pixel_comparison(current_pixel, previous_pixel)
-        if different_colour and previous_added == 0:
-            edges_rev_lat.append([x, y, [previous_pixel[0], previous_pixel[1], previous_pixel[2]], [current_pixel[0], current_pixel[1], current_pixel[2]]])
-            previous_added = 2
-        elif previous_added > 0:
-            previous_added = previous_added - 1
+        if different_colour:
+            edges_rev_lat.append([x, y])
 
 # Diagonal scan
 for x_start in range(img_width):
-    previous_added = 0
     for x in range(x_start, img_width):
         if x == x_start:
             y = 0
@@ -102,16 +78,11 @@ for x_start in range(img_width):
 
         current_pixel = numpydata[y][x]
         different_colour = pixel_comparison(current_pixel, previous_pixel)
-        if different_colour and previous_added == 0:
-            edges_diag.append([x, y, [previous_pixel[0], previous_pixel[1], previous_pixel[2]], [current_pixel[0], current_pixel[1], current_pixel[2]]])
-            previous_added = 2
-        elif previous_added > 0:
-            previous_added = previous_added - 1
+        if different_colour:
+            edges_diag.append([x, y])
 
 # Diagonal scan
 for y_start in range(img_height):
-    previous_added = 0
-
     for y in range(y_start, img_width):
         if y == y_start:
             x = 0
@@ -125,15 +96,11 @@ for y_start in range(img_height):
 
         current_pixel = numpydata[y][x]
         different_colour = pixel_comparison(current_pixel, previous_pixel)
-        if different_colour and previous_added == 0:
-            edges_diag.append([x, y, [previous_pixel[0], previous_pixel[1], previous_pixel[2]], [current_pixel[0], current_pixel[1], current_pixel[2]]])
-            previous_added = 2
-        elif previous_added > 0:
-            previous_added = previous_added - 1
+        if different_colour:
+            edges_diag.append([x, y])
 
 # Diagonal scan
 for x_start in range(img_width-1, 0, -1):
-    previous_added = 0
     for x in range(x_start - 1, 0, -1):
         if x == x_start - 1:
             y = 0
@@ -147,16 +114,11 @@ for x_start in range(img_width-1, 0, -1):
 
         current_pixel = numpydata[y][x]
         different_colour = pixel_comparison(current_pixel, previous_pixel)
-        if different_colour and previous_added == 0:
-            edges_diag.append([x, y, [previous_pixel[0], previous_pixel[1], previous_pixel[2]], [current_pixel[0], current_pixel[1], current_pixel[2]]])
-            previous_added = 2
-        elif previous_added > 0:
-            previous_added = previous_added - 1
+        if different_colour:
+            edges_diag.append([x, y])
 
 # Diagonal scan
 for y_start in range(img_height - 1, 0, -1):
-    previous_added = 0
-
     for y in range(y_start, img_height):
         if y == y_start:
             x = img_width - 1
@@ -170,103 +132,76 @@ for y_start in range(img_height - 1, 0, -1):
 
         current_pixel = numpydata[y][x]
         different_colour = pixel_comparison(current_pixel, previous_pixel)
-        if different_colour and previous_added == 0:
-            edges_diag.append([x, y, [previous_pixel[0], previous_pixel[1], previous_pixel[2]], [current_pixel[0], current_pixel[1], current_pixel[2]]])
-        elif previous_added > 0:
-            previous_added = previous_added - 1
+        if different_colour:
+            edges_diag.append([x, y])
 
 edges_prio_1 = []
 edges_prio_2 = []
 edges_prio_3 = []
 
-edges_diag_ch = [e[:2] for e in edges_diag]
-edges_rev_lat_ch = [e[0:2] for e in edges_rev_lat]
-edges_lat_ch = [e[:2] for e in edges_lat]
-
+#Compine and compile list of cross matches 
 for edge in edges_lat:
-    edge_co = edge[0:2]
-    if edge_co in edges_diag_ch and edge_co in edges_rev_lat_ch:
+    if edge in edges_diag and edge in edges_rev_lat:
         edges_prio_1.append(edge)
-    elif edge_co in edges_diag_ch or edge_co in edges_rev_lat_ch:
+    elif edge in edges_diag or edge in edges_rev_lat:
         edges_prio_2.append(edge)
     else:
         edges_prio_3.append(edge)
 
 for edge in edges_diag:
-    if edge_co in edges_lat_ch and edge_co in edges_rev_lat_ch:
+    if edge in edges_lat and edge in edges_rev_lat:
         continue
-    elif edge_co in edges_lat_ch or edge_co in edges_rev_lat_ch:
+    elif edge in edges_lat or edge in edges_rev_lat:
         edges_prio_2.append(edge)
     else:
         edges_prio_3.append(edge)
 
-edges_prio_1_ch = [e[:2] for e in edges_prio_1]
-edges_prio_2_ch = [e[:2] for e in edges_prio_2]
-
 for edge in edges_rev_lat:
-    edge_co = edge[0:2]
-    if edge_co not in edges_prio_1_ch and edge_co not in edges_prio_2_ch:
+    if edge not in edges_prio_1 and edge not in edges_prio_2:
         edges_prio_3.append(edge)
 
 edges_prio_1.sort()
 edges_prio_2.sort()
 edges_prio_3.sort()
-edges_unique_1 = list(edges_prio_1 for edges_prio_1,_ in itertools.groupby(edges_prio_1))
-edges_unique_2 = list(edges_prio_2 for edges_prio_2,_ in itertools.groupby(edges_prio_2))
-edges_unique_3 = list(edges_prio_3 for edges_prio_3,_ in itertools.groupby(edges_prio_3))
-
-edges_prio_1_xy = [e[:2] for e in edges_prio_1]
-edges_prio_2_xy = [e[:2] for e in edges_prio_2]
-edges_prio_3_xy = [e[:2] for e in edges_prio_3]
-
-#x_cords_3, y_cords_3 = zip(*edges_prio_3_xy)
-#plt.scatter(*zip(*edges_prio_3_xy),marker='.', s=0.1, color='green')
-#plt.scatter(x_cords_3, y_cords_3, marker='.', s=0.5, color='green')
-#x_cords_2, y_cords_2 = zip(*edges_prio_2_xy)
-#plt.scatter(*zip(*edges_prio_2_xy),marker='.', s=0.1, color='blue')
-#plt.scatter(x_cords_2,y_cords_2,marker='.', s=0.5, color='blue')
-#x_cords, y_cords = zip(*edges_prio_1_xy)
-#plt.scatter(*zip(*edges_prio_1_xy),marker='.', s=0.1, color='red')
-#plt.scatter(x_cords,y_cords,marker='.', s=0.5, color='red')
-#plt.gca().invert_yaxis()
-#plt.legend()
-#plt.show()
+list_of_edge_prios = [edges_prio_1, edges_prio_2, edges_prio_3]
 
 lines = []
 used = []
 index_rotation = [0, 1, -1, 2, -2, 3, -3]
 index_cap = len(index_rotation) + 1
 
+#Create rudamentary shapes
 shape_no = 0
 for edge in edges_prio_1:
-    xy = edge[:2]
+    xy = edge
     if xy not in used:
         new_shape = False
         circular_pattern = [[0,-1], [1,-1], [1,0], [1,1], [0,1], [-1,1], [-1,0], [-1,-1]]
         prev_dirct_index = 0
         start_point = xy
-
+        
+        #test all directions for close match
         for dirct_index, dirct in enumerate(circular_pattern):
             xy_n = [xy[0] + dirct[0], xy[1] + dirct[1]]
-            if xy_n in edges_prio_1_xy :
-                edge_n = [e for e in edges_prio_1 if e[:2] == xy_n]
-                if edge[2:5] and edge[5:] in [edge_n[2:5], edge_n[5:]]:
-                    current_shape = []
-                    shape_no = shape_no + 1
-                    current_shape.append([xy[0], xy[1]])
-                    current_shape.append([xy_n[0], xy_n[1]])
-                    used.append([xy[0], xy[1]])
-                    used.append([xy_n[0], xy_n[1]])
-                    prev_dirct = dirct
-                    new_shape = True  
-                    prev_dirct_index = dirct_index
-                    last_stored_xy = xy_n
-                    break
-        
+            colour_match_bool = colour_match(numpydata, xy, xy_n, dirct)
+            if xy_n in edges_prio_1 and colour_match_bool:
+                current_shape = []
+                shape_no = shape_no + 1
+                current_shape.append([xy[0], xy[1]])
+                current_shape.append([xy_n[0], xy_n[1]])
+                used.append([xy[0], xy[1]])
+                used.append([xy_n[0], xy_n[1]])
+                prev_dirct = dirct
+                new_shape = True  
+                prev_dirct_index = dirct_index
+                last_stored_xy = xy_n
+                break
+            
+        #if no clean match found, test for weaker matches
         if not new_shape:
             for dirct_index, dirct in enumerate(circular_pattern):
                 xy_n = [xy[0] + dirct[0], xy[1] + dirct[1]]
-                if xy_n in edges_prio_1_xy or edges_prio_2_xy :
+                if xy_n in edges_prio_1 or edges_prio_2 :
                     current_shape = []
                     shape_no = shape_no + 1
                     current_shape.append(xy)
@@ -281,7 +216,7 @@ for edge in edges_prio_1:
         
         if new_shape:
             possibilities = 5
-            colour_break = False
+            completed_loop = False
             while possibilities >= 1:
                 possibilities = possibilities - 1
                 xy = last_stored_xy
@@ -289,66 +224,47 @@ for edge in edges_prio_1:
                     test_index = ( prev_dirct_index + index_adj ) % index_cap
                     new_dirct = circular_pattern[test_index]
                     xy_n = [xy[0] + new_dirct[0], xy[1] + new_dirct[1]]
-                    edge = [e for e in edges_prio_1 if e[:2] == xy]
-                    edge_n = [e for e in edges_prio_1 if e[:2] == xy_n]
 
-                    if xy_n == start_point:
+                    if xy_n == start_point and len(current_shape) > 6:
                         current_shape.append(xy_n)
                         possibilities = 0
-                        colour_break = True
+                        completed_loop = True
                         break
                     
-                    elif edge[2:5] and edge[5:] in [edge_n[2:5], edge_n[5:]]:
+                    colour_match_bool = colour_match(numpydata, xy, xy_n, dirct)
+                    if xy_n in edges_prio_1 and xy_n not in used and colour_match_bool:
                         used.append(xy_n)
                         current_shape.append(xy_n)
                         last_stored_xy = xy_n
                         prev_dirct_index = test_index
                         possibilities = 5
                         break
-                    
-                if not colour_break and possibilities == 1:
-                    possibilities = 7
-                    while possibilities >= 1:
-                        possibilities = possibilities - 1
+                
+                # search for weaker matches
+                weak_match = False
+                if not completed_loop and possibilities == 1:
+                    if weak_match:
+                        break
+                    for edges_prio_n in list_of_edge_prios:
                         xy = last_stored_xy
                         for index_adj in index_rotation:
                             test_index = ( prev_dirct_index + index_adj ) % index_cap
                             new_dirct = circular_pattern[test_index]
                             xy_n = [xy[0] + new_dirct[0], xy[1] + new_dirct[1]]
 
-                            if xy_n == start_point:
+                            if xy_n == start_point and len(current_shape) > 6:
                                 current_shape.append(xy_n)
                                 possibilities = 0
+                                completed_loop = True
                                 break
 
-                            elif xy_n in edges_prio_1_xy and xy_n not in used:
+                            elif xy_n in edges_prio_n and xy_n not in used:
                                 used.append(xy_n)
                                 current_shape.append(xy_n)
                                 prev_dirct_index = test_index
-                                possibilities = 7
+                                possibilities = 5
+                                weak_match = True
                                 break
-                            
-                        if possibilities == 1:
-                            possibilities = 7
-                            while possibilities >= 1:
-                                possibilities = possibilities - 1
-                                xy = last_stored_xy
-                                for index_adj in index_rotation:
-                                    test_index = ( prev_dirct_index + index_adj ) % index_cap
-                                    new_dirct = circular_pattern[test_index]
-                                    xy_n = [xy[0] + new_dirct[0], xy[1] + new_dirct[1]]
-
-                                    if xy_n == start_point:
-                                        current_shape.append(xy_n)
-                                        possibilities = 0
-                                        break
-
-                                    elif xy_n in edges_prio_2_xy and xy_n not in used:
-                                        used.append(xy_n)
-                                        current_shape.append(xy_n)
-                                        prev_dirct_index = test_index
-                                        possibilities = 7
-                                        break
             
             lines.append([shape_no, current_shape])
 
