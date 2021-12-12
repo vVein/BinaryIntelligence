@@ -6,14 +6,19 @@ import numpy as np
 
 tolerance = 140
 
-def pixel_comparison(current_pixel, previous_pixel):
+def pixel_comparison(current_pixel, previous_pixel, tolerance = 140):
     comparison1 = abs(int(current_pixel[0]) - int(previous_pixel[0]))
     comparison2 = abs(int(current_pixel[1]) - int(previous_pixel[1]))
     comparison3 = abs(int(current_pixel[2]) - int(previous_pixel[2]))
     comparison = (comparison1 + comparison2 + comparison3) > tolerance
     return comparison
 
-def colour_match(numpydata, xy, xy_n, dirct):
+def colour_match(numpydata, xy, xy_n, tolerance):
+    xy_pixel = numpydata[xy[1]][xy[0]]
+    xy_n_pixel = numpydata[xy_n[1]][xy_n[0]]
+    return not pixel_comparison(xy_pixel, xy_n_pixel, tolerance)
+
+def redacted_colour_match(numpydata, xy, xy_n, dirct):
     matrix1 = np.array([[dirct[0], dirct[1]], [-dirct[0], -dirct[1]]])
     matrix2 = np.array([[0, 1], [1, 0]])
     matrix3 = np.dot(matrix1, matrix2)
@@ -33,6 +38,7 @@ def colour_match(numpydata, xy, xy_n, dirct):
         xyn_coordinate_2 = [xy_n[0] + pt * direction_2[0], xy_n[1] + pt * direction_2[1]]
         img_width = int(np.size(numpydata,1))
         img_height = int(len(numpydata))
+        
         if xy_coordinate_1[0] > img_width:
             xy_coordinate_1[0] = img_width
         if xy_coordinate_1[0] < 0:

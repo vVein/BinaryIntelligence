@@ -165,6 +165,8 @@ edges_prio_2.sort()
 edges_prio_3.sort()
 list_of_edge_prios = [edges_prio_1, edges_prio_2, edges_prio_3]
 
+#plot of edges
+
 lines = []
 used = []
 index_rotation = [0, 1, -1, 2, -2, 3, -3]
@@ -172,8 +174,8 @@ index_cap = len(index_rotation) + 1
 
 #Create rudamentary shapes
 shape_no = 0
-for edge in edges_prio_1:
-    xy = edge
+for xy in edges_prio_1:
+
     if xy not in used:
         new_shape = False
         circular_pattern = [[0,-1], [1,-1], [1,0], [1,1], [0,1], [-1,1], [-1,0], [-1,-1]]
@@ -181,10 +183,11 @@ for edge in edges_prio_1:
         start_point = xy
         
         #test all directions for close match
+        directional_possibilities_remaining = len(circular_pattern)
         for dirct_index, dirct in enumerate(circular_pattern):
             xy_n = [xy[0] + dirct[0], xy[1] + dirct[1]]
-            colour_match_bool = colour_match(numpydata, xy, xy_n, dirct)
-            if xy_n in edges_prio_1 and colour_match_bool:
+            colour_match_bool = colour_match(numpydata, xy, xy_n, 140)
+            if xy_n in edges_prio_1 and colour_match_bool and xy_n not in used:
                 current_shape = []
                 shape_no = shape_no + 1
                 current_shape.append([xy[0], xy[1]])
@@ -201,7 +204,7 @@ for edge in edges_prio_1:
         if not new_shape:
             for dirct_index, dirct in enumerate(circular_pattern):
                 xy_n = [xy[0] + dirct[0], xy[1] + dirct[1]]
-                if xy_n in edges_prio_1 or edges_prio_2 :
+                if xy_n in edges_prio_1 or edges_prio_2 and xy_n not in used:
                     current_shape = []
                     shape_no = shape_no + 1
                     current_shape.append(xy)
@@ -214,10 +217,11 @@ for edge in edges_prio_1:
                     last_stored_xy = xy_n
                     break
         
+        # Add to new polyline
         if new_shape:
-            possibilities = 5
+            possibilities = 6
             completed_loop = False
-            while possibilities >= 1:
+            while possibilities >= 1 and not completed_loop:
                 possibilities = possibilities - 1
                 xy = last_stored_xy
                 for index_adj in index_rotation[:5]:
@@ -225,34 +229,38 @@ for edge in edges_prio_1:
                     new_dirct = circular_pattern[test_index]
                     xy_n = [xy[0] + new_dirct[0], xy[1] + new_dirct[1]]
 
-                    if xy_n == start_point and len(current_shape) > 6:
+                    if xy_n == start_point and len(current_shape) > 8:
                         current_shape.append(xy_n)
                         possibilities = 0
                         completed_loop = True
                         break
                     
-                    colour_match_bool = colour_match(numpydata, xy, xy_n, dirct)
-                    if xy_n in edges_prio_1 and xy_n not in used and colour_match_bool:
+                    colour_match_bool = colour_match(numpydata, xy, xy_n, 140)
+                    if xy_n in edges_prio_1 and colour_match_bool and xy_n not in used :
                         used.append(xy_n)
                         current_shape.append(xy_n)
                         last_stored_xy = xy_n
                         prev_dirct_index = test_index
-                        possibilities = 5
+                        possibilities = 6
                         break
                 
-                # search for weaker matches
-                weak_match = False
+                # exhausted higher priority matches, search for weaker matches
+                weak_match_found = False
+                
                 if not completed_loop and possibilities == 1:
-                    if weak_match:
-                        break
-                    for edges_prio_n in list_of_edge_prios:
-                        xy = last_stored_xy
+                    
+                    for prio_index, edges_prio_n in enumerate(list_of_edge_prios):
+                        xy = last_stored_xy                        
+                        
+                        if weak_match_found:
+                            break
+                        
                         for index_adj in index_rotation:
                             test_index = ( prev_dirct_index + index_adj ) % index_cap
                             new_dirct = circular_pattern[test_index]
                             xy_n = [xy[0] + new_dirct[0], xy[1] + new_dirct[1]]
 
-                            if xy_n == start_point and len(current_shape) > 6:
+                            if xy_n == start_point and len(current_shape) > 8:
                                 current_shape.append(xy_n)
                                 possibilities = 0
                                 completed_loop = True
@@ -262,12 +270,13 @@ for edge in edges_prio_1:
                                 used.append(xy_n)
                                 current_shape.append(xy_n)
                                 prev_dirct_index = test_index
-                                possibilities = 5
-                                weak_match = True
+                                possibilities = 6
+                                weak_match_found = True
                                 break
             
             lines.append([shape_no, current_shape])
 
+# exclude 1 & 2 point lines
 for line in lines:
     if len(line[1]) > 3:
         x, y = map(list, zip(*line[1]))
