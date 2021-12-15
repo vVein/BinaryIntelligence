@@ -167,64 +167,55 @@ list_of_edge_prios = [edges_prio_1, edges_prio_2, edges_prio_3]
 
 #plot of edges
 
+
 lines = []
 used = []
 index_rotation = [0, 1, -1, 2, -2, 3, -3]
+circular_pattern = [[0,-1], [1,-1], [1,0], [1,1], [0,1], [-1,1], [-1,0], [-1,-1]]
 index_cap = len(index_rotation) + 1
-
-#Create rudamentary shapes
 shape_no = 0
-for xy in edges_prio_1:
+current_shape = []
 
-    if xy not in used:
-        new_shape = False
-        circular_pattern = [[0,-1], [1,-1], [1,0], [1,1], [0,1], [-1,1], [-1,0], [-1,-1]]
-        prev_dirct_index = 0
-        start_point = xy
-        
-        #test all directions for close match
-        directional_possibilities_remaining = len(circular_pattern)
-        for dirct_index, dirct in enumerate(circular_pattern):
-            xy_n = [xy[0] + dirct[0], xy[1] + dirct[1]]
-            colour_match_bool = colour_match(numpydata, xy, xy_n, 140)
-            if xy_n in edges_prio_1 and colour_match_bool and xy_n not in used:
-                current_shape = []
-                shape_no = shape_no + 1
-                current_shape.append([xy[0], xy[1]])
-                current_shape.append([xy_n[0], xy_n[1]])
-                used.append([xy[0], xy[1]])
-                used.append([xy_n[0], xy_n[1]])
-                prev_dirct = dirct
-                new_shape = True  
-                prev_dirct_index = dirct_index
-                last_stored_xy = xy_n
+# Polyline functions:
+
+def generate_polyline(start_point, prev_dirct_index, last_stored_xy):
+    possibilities = index_cap
+    completed_loop = False
+    while possibilities >= 1 and not completed_loop:
+        possibilities = possibilities - 1
+        xy = last_stored_xy
+        for index_adj in index_rotation:
+            test_index = ( prev_dirct_index + index_adj ) % index_cap
+            new_dirct = circular_pattern[test_index]
+            xy_n = [xy[0] + new_dirct[0], xy[1] + new_dirct[1]]
+
+            if xy_n == start_point and len(current_shape) > 8:
+                current_shape.append(xy_n)
+                possibilities = 0
+                completed_loop = True
                 break
             
-        #if no clean match found, test for weaker matches
-        if not new_shape:
-            for dirct_index, dirct in enumerate(circular_pattern):
-                xy_n = [xy[0] + dirct[0], xy[1] + dirct[1]]
-                if xy_n in edges_prio_1 or edges_prio_2 and xy_n not in used:
-                    current_shape = []
-                    shape_no = shape_no + 1
-                    current_shape.append(xy)
-                    current_shape.append(xy_n)
-                    used.append(xy)
-                    used.append(xy_n)
-                    prev_dirct = dirct
-                    new_shape = True  
-                    prev_dirct_index = dirct_index
-                    last_stored_xy = xy_n
-                    break
+            colour_match_bool = colour_match(numpydata, xy, xy_n, 140)
+            if xy_n in edges_prio_1 and colour_match_bool and xy_n not in used :
+                used.append(xy_n)
+                current_shape.append(xy_n)
+                last_stored_xy = xy_n
+                prev_dirct_index = test_index
+                possibilities = index_cap
+                break
         
-        # Add to new polyline
-        if new_shape:
-            possibilities = 6
-            completed_loop = False
-            while possibilities >= 1 and not completed_loop:
-                possibilities = possibilities - 1
-                xy = last_stored_xy
-                for index_adj in index_rotation[:5]:
+        # exhausted higher priority matches, search for weaker matches
+        weak_match_found = False
+        
+        if not completed_loop and possibilities == 1:
+            
+            for edges_prio_n in list_of_edge_prios:
+                xy = last_stored_xy                        
+                
+                if weak_match_found:
+                    break
+                
+                for index_adj in index_rotation:
                     test_index = ( prev_dirct_index + index_adj ) % index_cap
                     new_dirct = circular_pattern[test_index]
                     xy_n = [xy[0] + new_dirct[0], xy[1] + new_dirct[1]]
@@ -234,47 +225,96 @@ for xy in edges_prio_1:
                         possibilities = 0
                         completed_loop = True
                         break
-                    
-                    colour_match_bool = colour_match(numpydata, xy, xy_n, 140)
-                    if xy_n in edges_prio_1 and colour_match_bool and xy_n not in used :
+
+                    elif xy_n in edges_prio_n and xy_n not in used:
                         used.append(xy_n)
                         current_shape.append(xy_n)
-                        last_stored_xy = xy_n
                         prev_dirct_index = test_index
-                        possibilities = 6
+                        possibilities = index_cap
+                        weak_match_found = True
                         break
-                
-                # exhausted higher priority matches, search for weaker matches
-                weak_match_found = False
-                
-                if not completed_loop and possibilities == 1:
-                    
-                    for prio_index, edges_prio_n in enumerate(list_of_edge_prios):
-                        xy = last_stored_xy                        
-                        
-                        if weak_match_found:
-                            break
-                        
-                        for index_adj in index_rotation:
-                            test_index = ( prev_dirct_index + index_adj ) % index_cap
-                            new_dirct = circular_pattern[test_index]
-                            xy_n = [xy[0] + new_dirct[0], xy[1] + new_dirct[1]]
 
-                            if xy_n == start_point and len(current_shape) > 8:
-                                current_shape.append(xy_n)
-                                possibilities = 0
-                                completed_loop = True
-                                break
+def start_new_polylines():
+    global shape_no
+    for xy in edges_prio_1:
 
-                            elif xy_n in edges_prio_n and xy_n not in used:
-                                used.append(xy_n)
-                                current_shape.append(xy_n)
-                                prev_dirct_index = test_index
-                                possibilities = 6
-                                weak_match_found = True
-                                break
+        if xy not in used:
+            new_shape = False
+
+            prev_dirct_index = 0
+            start_point = xy
             
+            # test all directions for a close match
+            directional_possibilities_remaining = len(circular_pattern)
+            for dirct_index, dirct in enumerate(circular_pattern):
+                directional_possibilities_remaining = directional_possibilities_remaining - 1
+                xy_n = [xy[0] + dirct[0], xy[1] + dirct[1]]
+                colour_match_bool = colour_match(numpydata, xy, xy_n, 140)
+                if xy_n in edges_prio_1 and colour_match_bool and xy_n not in used:
+                    current_shape = []
+                    shape_no = shape_no + 1
+                    current_shape.append([xy[0], xy[1]])
+                    current_shape.append([xy_n[0], xy_n[1]])
+                    used.append([xy[0], xy[1]])
+                    used.append([xy_n[0], xy_n[1]])
+                    initial_xy = xy
+                    new_shape = True  
+                    prev_dirct_index = dirct_index
+                    initial_directionional_index = dirct_index
+                    last_stored_xy = xy_n
+                    break
+                
+            # if no clean match found, test for weaker matches
+            if not new_shape:
+                directional_possibilities_remaining = len(circular_pattern)
+                for dirct_index, dirct in enumerate(circular_pattern):
+                    directional_possibilities_remaining = directional_possibilities_remaining - 1
+                    xy_n = [xy[0] + dirct[0], xy[1] + dirct[1]]
+                    if ( xy_n in edges_prio_1 or xy_n in edges_prio_2 ) and xy_n not in used:
+                        current_shape = []
+                        shape_no = shape_no + 1
+                        current_shape.append(xy)
+                        current_shape.append(xy_n)
+                        used.append(xy)
+                        used.append(xy_n)
+                        initial_xy = xy
+                        new_shape = True  
+                        prev_dirct_index = dirct_index
+                        initial_directionional_index = dirct_index
+                        last_stored_xy = xy_n
+                        break
+            
+            # Add to new polyline            
+            if new_shape:
+                generate_polyline(start_point, prev_dirct_index, last_stored_xy)
+                
+            if directional_possibilities_remaining != 0:
+                # new starting direction, opposite of initial starting direction from origin
+                reverse_initial_direction_index = ( initial_directionional_index + index_cap / 2 ) % index_cap
+                xy = initial_xy
+
+                for index_adj in index_rotation:
+                    if directional_possibilities_remaining != 0:
+                        directional_possibilities_remaining = directional_possibilities_remaining - 1
+                        test_index = int( ( reverse_initial_direction_index + index_adj ) % index_cap )
+                        new_dirct = circular_pattern[test_index]
+                        xy_n = [xy[0] + new_dirct[0], xy[1] + new_dirct[1]]
+
+                        colour_match_bool = colour_match(numpydata, xy, xy_n, 140)
+                        if xy_n in edges_prio_1 and colour_match_bool and xy_n not in used :
+                            used.append(xy_n)
+                            current_shape.append(xy_n)
+                            last_stored_xy = xy_n
+                            prev_dirct_index = test_index
+                            
+                            generate_polyline(start_point, prev_dirct_index, last_stored_xy)
+                            
+                            directional_possibilities_remaining = 0
+                            break
+                
             lines.append([shape_no, current_shape])
+                
+start_new_polylines()
 
 # exclude 1 & 2 point lines
 for line in lines:
