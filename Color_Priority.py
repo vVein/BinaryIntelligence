@@ -166,7 +166,22 @@ edges_prio_3.sort()
 list_of_edge_prios = [edges_prio_1, edges_prio_2, edges_prio_3]
 
 #plot of edges
+edges_unique_1 = list(edges_prio_1 for edges_prio_1,_ in itertools.groupby(edges_prio_1))
+edges_unique_2 = list(edges_prio_2 for edges_prio_2,_ in itertools.groupby(edges_prio_2))
+edges_unique_3 = list(edges_prio_3 for edges_prio_3,_ in itertools.groupby(edges_prio_3))
 
+x_cords_3, y_cords_3 = zip(*edges_prio_3)
+plt.scatter(*zip(*edges_prio_3),marker='.', s=0.1, color='green')
+plt.scatter(x_cords_3, y_cords_3, marker='.', s=0.5, color='green')
+x_cords_2, y_cords_2 = zip(*edges_prio_2)
+plt.scatter(*zip(*edges_prio_2),marker='.', s=0.1, color='blue')
+plt.scatter(x_cords_2,y_cords_2,marker='.', s=0.5, color='blue')
+x_cords, y_cords = zip(*edges_prio_1)
+plt.scatter(*zip(*edges_prio_1),marker='.', s=0.1, color='red')
+plt.scatter(x_cords,y_cords,marker='.', s=0.5, color='red')
+plt.gca().invert_yaxis()
+plt.legend()
+plt.show()
 
 lines = []
 used = []
@@ -179,24 +194,36 @@ current_shape = []
 # Polyline functions:
 
 def generate_polyline(start_point, prev_dirct_index, last_stored_xy):
+    global current_shape
     possibilities = index_cap
     completed_loop = False
     while possibilities >= 1 and not completed_loop:
-        possibilities = possibilities - 1
+
         xy = last_stored_xy
+        
+        if xy == [545, 52]:
+            print('xy', xy , 'possibilities', possibilities)
+        
         for index_adj in index_rotation:
+            possibilities = possibilities - 1
             test_index = ( prev_dirct_index + index_adj ) % index_cap
             new_dirct = circular_pattern[test_index]
             xy_n = [xy[0] + new_dirct[0], xy[1] + new_dirct[1]]
+            
+            if xy_n == [544, 52]:
+                print('xy_n in used', xy_n in used)
 
-            if xy_n == start_point and len(current_shape) > 8:
+            if xy_n == start_point and len(current_shape) > 12:
                 current_shape.append(xy_n)
                 possibilities = 0
                 completed_loop = True
                 break
             
-            colour_match_bool = colour_match(numpydata, xy, xy_n, 140)
-            if xy_n in edges_prio_1 and colour_match_bool and xy_n not in used :
+            if xy_n in used:
+                continue
+            
+            colour_match_bool = colour_match(numpydata, xy, xy_n, 200)
+            if xy_n in edges_prio_1 and colour_match_bool :
                 used.append(xy_n)
                 current_shape.append(xy_n)
                 last_stored_xy = xy_n
@@ -219,8 +246,12 @@ def generate_polyline(start_point, prev_dirct_index, last_stored_xy):
                     test_index = ( prev_dirct_index + index_adj ) % index_cap
                     new_dirct = circular_pattern[test_index]
                     xy_n = [xy[0] + new_dirct[0], xy[1] + new_dirct[1]]
-
-                    if xy_n == start_point and len(current_shape) > 8:
+                    
+                    if xy_n in used:
+                        continue
+                    
+                    # Search for self intersection
+                    if xy_n == start_point and len(current_shape) > 12:
                         current_shape.append(xy_n)
                         possibilities = 0
                         completed_loop = True
@@ -231,11 +262,12 @@ def generate_polyline(start_point, prev_dirct_index, last_stored_xy):
                         current_shape.append(xy_n)
                         prev_dirct_index = test_index
                         possibilities = index_cap
+                        last_stored_xy = xy_n
                         weak_match_found = True
                         break
 
 def start_new_polylines():
-    global shape_no
+    global shape_no, current_shape
     for xy in edges_prio_1:
 
         if xy not in used:
@@ -244,12 +276,15 @@ def start_new_polylines():
             prev_dirct_index = 0
             start_point = xy
             
+            if xy == [558,74] or xy == [546,52]:
+                print ('start', xy)
+            
             # test all directions for a close match
             directional_possibilities_remaining = len(circular_pattern)
             for dirct_index, dirct in enumerate(circular_pattern):
                 directional_possibilities_remaining = directional_possibilities_remaining - 1
                 xy_n = [xy[0] + dirct[0], xy[1] + dirct[1]]
-                colour_match_bool = colour_match(numpydata, xy, xy_n, 140)
+                colour_match_bool = colour_match(numpydata, xy, xy_n, 200)
                 if xy_n in edges_prio_1 and colour_match_bool and xy_n not in used:
                     current_shape = []
                     shape_no = shape_no + 1
@@ -300,7 +335,7 @@ def start_new_polylines():
                         new_dirct = circular_pattern[test_index]
                         xy_n = [xy[0] + new_dirct[0], xy[1] + new_dirct[1]]
 
-                        colour_match_bool = colour_match(numpydata, xy, xy_n, 140)
+                        colour_match_bool = colour_match(numpydata, xy, xy_n, 400)
                         if xy_n in edges_prio_1 and colour_match_bool and xy_n not in used :
                             used.append(xy_n)
                             current_shape.append(xy_n)
@@ -318,7 +353,7 @@ start_new_polylines()
 
 # exclude 1 & 2 point lines
 for line in lines:
-    if len(line[1]) > 3:
+    if len(line[1]) > 8:
         x, y = map(list, zip(*line[1]))
         plt.plot(x, y, label = "line {}".format(line[0]) )
 plt.gca().invert_yaxis()
@@ -326,72 +361,3 @@ plt.show()
 
 terminus_points = []
 
-for line in lines:
-    if len(line[1]) > 3:
-        end_index = len(line[1]) - 1
-        begin_point = line[1][0]
-        end_point = line[1][end_index]
-        # Remove complete loops, probable shapes
-        if begin_point == end_point:
-            continue
-        # Locate other end points in close proximity
-        # Should eventually locate all line points, not just end points
-        terminus_points.append([line[0], begin_point])
-        terminus_points.append([line[0], end_point])
-
-lines_to_be_combined = []
-flagged = []
-for terminus in terminus_points:
-    if terminus not in flagged:
-        terminus_xy = terminus[1]
-        for termini in terminus_points:
-            x_delta = abs(terminus_xy[0] - termini[1][0])
-            y_delta = abs(terminus_xy[1] - termini[1][1])
-            if x_delta < 3 and y_delta < 3 and x_delta + y_delta != 0:
-                lines_to_be_combined.append([terminus, termini])
-                flagged.append(terminus)
-                flagged.append(termini)
-
-lines_to_be_removed = []
-for entries in lines_to_be_combined:
-
-    first_xy = entries[0][1]
-    first_line_no = entries[0][0]
-    first_line_index = first_line_no - 1
-    first_line = lines[first_line_index][1]
-    second_xy = entries[1][1]
-    second_line_no = entries[1][0]
-    second_line_index = second_line_no - 1
-    second_line = lines[second_line_index][1]
-
-    if first_line_no == second_line_no:
-        continue
-
-    if first_xy == first_line[0]:
-        if second_xy == second_line[0]:
-            replacement = second_line[::-1] + first_line
-            lines[first_line_index][1] = replacement
-            lines_to_be_removed.append(second_line_index)
-        elif second_xy == second_line[-1]:
-            replacement = second_line + first_line
-            lines[first_line_index][1] = replacement
-            lines_to_be_removed.append(second_line_index)
-    elif first_xy == first_line[-1]:
-        if second_xy == second_line[0]:
-            replacement = first_line + second_line
-            lines[first_line_index][1] = replacement
-            lines_to_be_removed.append(second_line_index)
-        elif second_xy == second_line[-1]:
-            replacement = first_line + second_line[::-1]
-            lines[first_line_index][1] = replacement
-            lines_to_be_removed.append(second_line_index)
-
-for line_index in reversed(lines_to_be_removed):
-    a = lines.pop(line_index)
-
-for line in lines:
-    if len(line[1]) > 3:
-        x, y = map(list, zip(*line[1]))
-        plt.plot(x, y, label = "line {}".format(line[0]) )
-plt.gca().invert_yaxis()
-plt.show()
