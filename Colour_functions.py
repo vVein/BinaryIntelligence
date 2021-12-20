@@ -13,6 +13,16 @@ def pixel_comparison(current_pixel, previous_pixel, tolerance = 105):
     comparison = (comparison1 + comparison2 + comparison3) > tolerance
     return comparison
 
+def weighted_colour_match(numpydata, xy_1, xy_2):
+    pixel_1 = numpydata[xy_1[1]][xy_1[0]]
+    pixel_2 = numpydata[xy_2[1]][xy_2[0]]
+    comparison1 = abs(int(pixel_1[0]) - int(pixel_2[0]))
+    comparison2 = abs(int(pixel_1[1]) - int(pixel_2[1]))
+    comparison3 = abs(int(pixel_1[2]) - int(pixel_2[2]))
+    comparison = comparison1 + comparison2 + comparison3
+    weight = int(max( 80 - comparison / 2, 0))
+    return weight
+
 def colour_match(numpydata, xy, xy_n, tolerance):
     xy_pixel = numpydata[xy[1]][xy[0]]
     xy_n_pixel = numpydata[xy_n[1]][xy_n[0]]
