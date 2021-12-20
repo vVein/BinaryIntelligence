@@ -201,18 +201,12 @@ def generate_polyline(start_point, prev_dirct_index, last_stored_xy):
 
         xy = last_stored_xy
         
-        if xy == [545, 52]:
-            print('xy', xy , 'possibilities', possibilities)
-        
         for index_adj in index_rotation:
             possibilities = possibilities - 1
             test_index = ( prev_dirct_index + index_adj ) % index_cap
             new_dirct = circular_pattern[test_index]
             xy_n = [xy[0] + new_dirct[0], xy[1] + new_dirct[1]]
             
-            if xy_n == [544, 52]:
-                print('xy_n in used', xy_n in used)
-
             if xy_n == start_point and len(current_shape) > 12:
                 current_shape.append(xy_n)
                 possibilities = 0
@@ -222,7 +216,8 @@ def generate_polyline(start_point, prev_dirct_index, last_stored_xy):
             if xy_n in used:
                 continue
             
-            colour_match_bool = colour_match(numpydata, xy, xy_n, 200)
+            colour_match_bool = colour_match(numpydata, xy, xy_n, 250)
+                      
             if xy_n in edges_prio_1 and colour_match_bool :
                 used.append(xy_n)
                 current_shape.append(xy_n)
@@ -236,17 +231,17 @@ def generate_polyline(start_point, prev_dirct_index, last_stored_xy):
         
         if not completed_loop and possibilities == 1:
             
-            for edges_prio_n in list_of_edge_prios:
-                xy = last_stored_xy                        
+            for edge_n, edges_prio_n in enumerate(list_of_edge_prios):
+                xy = last_stored_xy            
                 
                 if weak_match_found:
-                    break
+                    break  
                 
                 for index_adj in index_rotation:
                     test_index = ( prev_dirct_index + index_adj ) % index_cap
                     new_dirct = circular_pattern[test_index]
                     xy_n = [xy[0] + new_dirct[0], xy[1] + new_dirct[1]]
-                    
+                                      
                     if xy_n in used:
                         continue
                     
@@ -275,16 +270,13 @@ def start_new_polylines():
 
             prev_dirct_index = 0
             start_point = xy
-            
-            if xy == [558,74] or xy == [546,52]:
-                print ('start', xy)
-            
+                   
             # test all directions for a close match
             directional_possibilities_remaining = len(circular_pattern)
             for dirct_index, dirct in enumerate(circular_pattern):
                 directional_possibilities_remaining = directional_possibilities_remaining - 1
                 xy_n = [xy[0] + dirct[0], xy[1] + dirct[1]]
-                colour_match_bool = colour_match(numpydata, xy, xy_n, 200)
+                colour_match_bool = colour_match(numpydata, xy, xy_n, 250)
                 if xy_n in edges_prio_1 and colour_match_bool and xy_n not in used:
                     current_shape = []
                     shape_no = shape_no + 1
@@ -335,7 +327,7 @@ def start_new_polylines():
                         new_dirct = circular_pattern[test_index]
                         xy_n = [xy[0] + new_dirct[0], xy[1] + new_dirct[1]]
 
-                        colour_match_bool = colour_match(numpydata, xy, xy_n, 400)
+                        colour_match_bool = colour_match(numpydata, xy, xy_n, 250)
                         if xy_n in edges_prio_1 and colour_match_bool and xy_n not in used :
                             used.append(xy_n)
                             current_shape.append(xy_n)
@@ -353,7 +345,7 @@ start_new_polylines()
 
 # exclude 1 & 2 point lines
 for line in lines:
-    if len(line[1]) > 8:
+    if len(line[1]) > 12:
         x, y = map(list, zip(*line[1]))
         plt.plot(x, y, label = "line {}".format(line[0]) )
 plt.gca().invert_yaxis()

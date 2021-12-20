@@ -6,7 +6,7 @@ import numpy as np
 
 tolerance = 140
 
-def pixel_comparison(current_pixel, previous_pixel, tolerance = 140):
+def pixel_comparison(current_pixel, previous_pixel, tolerance = 105):
     comparison1 = abs(int(current_pixel[0]) - int(previous_pixel[0]))
     comparison2 = abs(int(current_pixel[1]) - int(previous_pixel[1]))
     comparison3 = abs(int(current_pixel[2]) - int(previous_pixel[2]))
