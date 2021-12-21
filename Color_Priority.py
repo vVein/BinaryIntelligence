@@ -139,7 +139,7 @@ edges_prio_1 = []
 edges_prio_2 = []
 edges_prio_3 = []
 
-#Compine and compile list of cross matches 
+#Combine and compile list of cross matches 
 for edge in edges_lat:
     if edge in edges_diag and edge in edges_rev_lat:
         edges_prio_1.append(edge)
@@ -187,6 +187,7 @@ lines = []
 used = []
 index_rotation = [0, 1, -1, 2, -2, 3, -3]
 circular_pattern = [[0,-1], [1,-1], [1,0], [1,1], [0,1], [-1,1], [-1,0], [-1,-1]]
+direction_weighting = [90, 70, 70, 50, 50, 30, 30]
 index_cap = len(index_rotation) + 1
 shape_no = 0
 current_shape = []
@@ -195,71 +196,52 @@ current_shape = []
 
 def generate_polyline(start_point, prev_dirct_index, last_stored_xy):
     global current_shape
-    possibilities = index_cap
     completed_loop = False
-    while possibilities >= 1 and not completed_loop:
-
+    suitable_matches = True
+    while suitable_matches and not completed_loop:
+        
         xy = last_stored_xy
         
-        for index_adj in index_rotation:
-            possibilities = possibilities - 1
-            test_index = ( prev_dirct_index + index_adj ) % index_cap
-            new_dirct = circular_pattern[test_index]
-            xy_n = [xy[0] + new_dirct[0], xy[1] + new_dirct[1]]
+        # build list of suitable surrounding points and select best match  
+        surrounding_pixels_weighted = []
+        for n, index_adj in enumerate(index_rotation):
+            applied_index = ( prev_dirct_index + index_adj ) % index_cap
+            direction = circular_pattern[applied_index]
+            adjacent_pixel = [xy[0] + direction[0], xy[1] + direction[1]]
             
-            if xy_n == start_point and len(current_shape) > 12:
-                current_shape.append(xy_n)
-                possibilities = 0
-                completed_loop = True
-                break
-            
-            if xy_n in used:
-                continue
-            
-            colour_match_bool = colour_match(numpydata, xy, xy_n, 250)
-                      
-            if xy_n in edges_prio_1 and colour_match_bool :
-                used.append(xy_n)
-                current_shape.append(xy_n)
-                last_stored_xy = xy_n
-                prev_dirct_index = test_index
-                possibilities = index_cap
-                break
-        
-        # exhausted higher priority matches, search for weaker matches
-        weak_match_found = False
-        
-        if not completed_loop and possibilities == 1:
-            
-            for edge_n, edges_prio_n in enumerate(list_of_edge_prios):
-                xy = last_stored_xy            
+            if adjacent_pixel in used:
+                    continue
                 
-                if weak_match_found:
-                    break  
+            directional_weighting = direction_weighting[n]
                 
-                for index_adj in index_rotation:
-                    test_index = ( prev_dirct_index + index_adj ) % index_cap
-                    new_dirct = circular_pattern[test_index]
-                    xy_n = [xy[0] + new_dirct[0], xy[1] + new_dirct[1]]
-                                      
-                    if xy_n in used:
-                        continue
-                    
-                    # Search for self intersection
-                    if xy_n == start_point and len(current_shape) > 12:
-                        current_shape.append(xy_n)
-                        possibilities = 0
-                        completed_loop = True
-                        break
+            if adjacent_pixel in edges_prio_1:
+                pixel_weight = edges_prio_1_weighting + weighted_colour_match(numpydata, xy, adjacent_pixel) + directional_weighting
+                surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
+            elif adjacent_pixel in edges_prio_2:
+                pixel_weight = edges_prio_1_weighting + weighted_colour_match(numpydata, xy, adjacent_pixel) + directional_weighting
+                surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
+            elif adjacent_pixel in edges_prio_3:
+                pixel_weight = edges_prio_1_weighting + weighted_colour_match(numpydata, xy, adjacent_pixel) + directional_weighting
+                surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])       
+            
+        surrounding_pixels_weighted.sort(key = lambda surrounding_pixels_weighted : surrounding_pixels_weighted[2], reverse = True)
+        xy_n = [surrounding_pixels_weighted[0][0], surrounding_pixels_weighted[0][1]]
+        xy_n_weight = surrounding_pixels_weighted[0][2]
+            
+        if xy_n == start_point and len(current_shape) > 12:
+            current_shape.append(xy_n)
+            completed_loop = True
+            break
+        
+        if xy_n_weight >= edges_prio_1_weighting:
+            used.append(xy_n)
+            current_shape.append(xy_n)
+            last_stored_xy = xy_n
+            prev_dirct_index = applied_index
 
-                    elif xy_n in edges_prio_n and xy_n not in used:
-                        used.append(xy_n)
-                        current_shape.append(xy_n)
-                        prev_dirct_index = test_index
-                        possibilities = index_cap
-                        last_stored_xy = xy_n
-                        weak_match_found = True
-                        break
+        if xy_n_weight < edges_prio_1_weighting:
+            suitable_matches = False
+
 
 edges_prio_1_weighting = 70
 edges_prio_2_weighting = 50
@@ -280,7 +262,8 @@ def start_new_polylines():
             for direction in circular_pattern:
                 adjacent_pixel = [xy[0] + direction[0], xy[1] + direction[1]]
                 surrounding_pixel_xys.append([adjacent_pixel[0], adjacent_pixel[1]])
-                        
+            
+            # build list of suitable surrounding points and select best match       
             surrounding_pixels_weighted = []
             for adjacent_pixel in surrounding_pixel_xys:
                 if xy_n in used:
@@ -298,8 +281,6 @@ def start_new_polylines():
             surrounding_pixels_weighted.sort(key = lambda surrounding_pixels_weighted : surrounding_pixels_weighted[2], reverse = True)
             xy_n = [surrounding_pixels_weighted[0][0], surrounding_pixels_weighted[0][1]]
             xy_n_weight = surrounding_pixels_weighted[0][2]
-            print('surrounding_pixels_weighted', surrounding_pixels_weighted[0])
-            print('xy_n', xy_n)
             
             if xy_n_weight >= edges_prio_1_weighting:
                 current_shape = []
@@ -309,8 +290,8 @@ def start_new_polylines():
                 used.append([xy[0], xy[1]])
                 used.append([xy_n[0], xy_n[1]])
                 initial_xy = xy
-                new_shape = True 
-                dirct_index =  [indx for indx, xy_sp in enumerate(surrounding_pixel_xys) if xy_sp == xy_n]
+                new_shape = True
+                dirct_index = [indx for indx, xy_sp in enumerate(surrounding_pixel_xys) if xy_sp == xy_n]
                 prev_dirct_index = dirct_index
                 initial_directionional_index = dirct_index
                 last_stored_xy = xy_n
