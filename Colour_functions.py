@@ -20,7 +20,7 @@ def weighted_colour_match(numpydata, xy_1, xy_2):
     comparison2 = abs(int(pixel_1[1]) - int(pixel_2[1]))
     comparison3 = abs(int(pixel_1[2]) - int(pixel_2[2]))
     comparison = comparison1 + comparison2 + comparison3
-    weight = int(max( 80 - comparison / 2, 0))
+    weight = int(max( 70 - comparison / 2, 0))
     return weight
 
 def colour_match(numpydata, xy, xy_n, tolerance):
