@@ -170,27 +170,28 @@ edges_unique_1 = list(edges_prio_1 for edges_prio_1,_ in itertools.groupby(edges
 edges_unique_2 = list(edges_prio_2 for edges_prio_2,_ in itertools.groupby(edges_prio_2))
 edges_unique_3 = list(edges_prio_3 for edges_prio_3,_ in itertools.groupby(edges_prio_3))
 
-#x_cords_3, y_cords_3 = zip(*edges_prio_3)
-#plt.scatter(*zip(*edges_prio_3),marker='.', s=0.1, color='green')
-#plt.scatter(x_cords_3, y_cords_3, marker='.', s=0.5, color='green')
-#x_cords_2, y_cords_2 = zip(*edges_prio_2)
-#plt.scatter(*zip(*edges_prio_2),marker='.', s=0.1, color='blue')
-#plt.scatter(x_cords_2,y_cords_2,marker='.', s=0.5, color='blue')
-#x_cords, y_cords = zip(*edges_prio_1)
-#plt.scatter(*zip(*edges_prio_1),marker='.', s=0.1, color='red')
-#plt.scatter(x_cords,y_cords,marker='.', s=0.5, color='red')
-#plt.gca().invert_yaxis()
-#plt.legend()
-#plt.show()
+x_cords_3, y_cords_3 = zip(*edges_prio_3)
+plt.scatter(*zip(*edges_prio_3),marker='.', s=0.1, color='green')
+plt.scatter(x_cords_3, y_cords_3, marker='.', s=0.5, color='green')
+x_cords_2, y_cords_2 = zip(*edges_prio_2)
+plt.scatter(*zip(*edges_prio_2),marker='.', s=0.1, color='blue')
+plt.scatter(x_cords_2,y_cords_2,marker='.', s=0.5, color='blue')
+x_cords, y_cords = zip(*edges_prio_1)
+plt.scatter(*zip(*edges_prio_1),marker='.', s=0.1, color='red')
+plt.scatter(x_cords,y_cords,marker='.', s=0.5, color='red')
+plt.gca().invert_yaxis()
+plt.legend()
+plt.show()
 
 lines = []
 used = []
 index_rotation = [0, 1, -1, 2, -2, 3, -3]
 circular_pattern = [[0,-1], [1,-1], [1,0], [1,1], [0,1], [-1,1], [-1,0], [-1,-1]]
-direction_weighting = [120, 100, 100, 50, 50, 30, 30]
-edges_prio_1_weighting = 80
+direction_weighting = [110, 80, 80, 50, 50, 30, 30]
+edges_prio_1_weighting = 100
 edges_prio_2_weighting = 60
 edges_prio_3_weighting = 30
+weighting_threshold = 120
 index_cap = len(index_rotation) + 1
 shape_no = 0
 current_shape = []
@@ -212,9 +213,14 @@ def generate_polyline(start_point, prev_dirct_index, last_stored_xy):
             direction = circular_pattern[applied_index]
             adjacent_pixel = [xy[0] + direction[0], xy[1] + direction[1]]
             
+            if adjacent_pixel == start_point and len(current_shape) > 12:
+                pixel_weight = edges_prio_1_weighting * 10
+                surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
+                continue
+                        
             if adjacent_pixel in used:
-                    continue
-                
+                continue
+
             directional_weighting = direction_weighting[n]
                 
             if adjacent_pixel in edges_prio_1:
@@ -240,24 +246,25 @@ def generate_polyline(start_point, prev_dirct_index, last_stored_xy):
             completed_loop = True
             break
         
-        if xy_n_weight >= edges_prio_1_weighting:
+        if xy_n_weight >= weighting_threshold:
             used.append(xy_n)
             current_shape.append(xy_n)
             last_stored_xy = xy_n
-            delta = [xy[0]-xy_n[0],xy[1]-xy_n[1]]
+            delta = [xy_n[0]-xy[0],xy_n[1]-xy[1]]
             dirct_index = [indx for indx, dirct in enumerate(circular_pattern) if dirct == delta]
             prev_dirct_index = dirct_index[0]
 
-        if xy_n_weight < edges_prio_1_weighting:
+        if xy_n_weight < weighting_threshold:
             suitable_matches = False
-
 
 def start_new_polylines():
     global shape_no, current_shape
     for xy in edges_prio_1:
-
+        
+        new_shape = False
+        surrounding_pixel_in_used = False
+                
         if xy not in used:
-            new_shape = False
 
             prev_dirct_index = 0
             start_point = xy
@@ -272,7 +279,8 @@ def start_new_polylines():
             surrounding_pixels_weighted = []
             for adjacent_pixel in surrounding_pixel_xys:
                 if adjacent_pixel in used:
-                        continue
+                    surrounding_pixel_in_used = True
+                    break
                 if adjacent_pixel in edges_prio_1:
                     pixel_weight = edges_prio_1_weighting + weighted_colour_match(numpydata, xy, adjacent_pixel)
                     surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
@@ -282,7 +290,10 @@ def start_new_polylines():
                 elif adjacent_pixel in edges_prio_3:
                     pixel_weight = edges_prio_1_weighting + weighted_colour_match(numpydata, xy, adjacent_pixel)
                     surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
-                    
+            
+            if surrounding_pixel_in_used:
+                continue
+                 
             if len(surrounding_pixels_weighted) == 0:
                 continue
                     
@@ -290,7 +301,7 @@ def start_new_polylines():
             xy_n = [surrounding_pixels_weighted[0][0], surrounding_pixels_weighted[0][1]]
             xy_n_weight = surrounding_pixels_weighted[0][2]
             
-            if xy_n_weight >= edges_prio_1_weighting:
+            if xy_n_weight >= weighting_threshold:
                 current_shape = []
                 shape_no = shape_no + 1
                 current_shape.append([xy[0], xy[1]])
@@ -299,7 +310,7 @@ def start_new_polylines():
                 used.append([xy_n[0], xy_n[1]])
                 initial_xy = xy
                 new_shape = True
-                delta = [xy[0]-xy_n[0],xy[1]-xy_n[1]]
+                delta = [xy_n[0]-xy[0],xy_n[1]-xy[1]]
                 dirct_index = [indx for indx, dirct in enumerate(circular_pattern) if dirct == delta]
                 prev_dirct_index = dirct_index[0]
                 initial_directionional_index = dirct_index[0]
@@ -320,7 +331,7 @@ start_new_polylines()
 
 # exclude 1 & 2 point lines
 for line in lines:
-    if len(line[1]) > 12:
+    if len(line[1]) > 6:
         x, y = map(list, zip(*line[1]))
         plt.plot(x, y, label = "line {}".format(line[0]) )
 plt.gca().invert_yaxis()
