@@ -3,6 +3,7 @@ from numpy import asarray
 import matplotlib.pyplot as plt
 import numpy as np
 import itertools
+from Colour_functions import *
 
 # load the image and convert into
 # numpy array
@@ -46,3 +47,6 @@ sub_tree = [2]
 sub_tree.append([4,2])
 sub_tree.append([7,6])
 print(sub_tree)
+
+pix = block_predominant_colour(numpydata, [222,364], 16)
+print(pix[0])

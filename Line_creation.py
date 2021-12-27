@@ -5,190 +5,21 @@ import matplotlib.pyplot as plt
 import numpy as np
 import itertools
 from Colour_functions import *
+from Edge_detection import *
 
 img = Image.open(r'C:\Users\Stude\OneDrive\Pictures\Image-Analysis\Shapes.jpg')
 numpydata = asarray(img)
 
-img_width = int(np.size(numpydata,1))
-img_height = int(len(numpydata))
-edges_lat = []
-edges_rev_lat = []
-edges_diag = []
+edges_prio_1, edges_prio_2, edges_prio_3 = image_edge_detection(numpydata, 200)
 
-# Lateral scan (Left ro right)
-for y in range(img_height):
-    for x in range(img_width):
-        if x == 0:
-            current_pixel = numpydata[y][x]
-            continue
-        previous_pixel = current_pixel
-        current_pixel = numpydata[y][x]
-        different_colour = pixel_comparison(current_pixel, previous_pixel)
-        if different_colour:
-            edges_lat.append([x, y])
-
-# Lateral scan (Top to bottom)
-for x in range(img_width):
-    for y in range(img_height):
-        if y == 0:
-            current_pixel = numpydata[y][x]
-            continue
-        previous_pixel = current_pixel
-        current_pixel = numpydata[y][x]
-        different_colour = pixel_comparison(current_pixel, previous_pixel)
-        if different_colour:
-            edges_lat.append([x, y])
-
-# Reverse Lateral scan (Right to left)
-for y in range(img_height):
-    for x in range(img_width - 1, 0, -1):
-        if x == img_width - 1:
-            current_pixel = numpydata[y][x]
-            continue
-        previous_pixel = current_pixel
-        current_pixel = numpydata[y][x]
-        different_colour = pixel_comparison(current_pixel, previous_pixel)
-        if different_colour:
-            edges_rev_lat.append([x, y])
-
-# Reverse Lateral scan (Bottom to top)
-for x in range(img_width):
-    for y in range(img_height - 1, 0, -1):
-        if y == img_height - 1:
-            current_pixel = numpydata[y][x]
-            continue
-        previous_pixel = current_pixel
-        current_pixel = numpydata[y][x]
-        different_colour = pixel_comparison(current_pixel, previous_pixel)
-        if different_colour:
-            edges_rev_lat.append([x, y])
-
-# Diagonal scan
-for x_start in range(img_width):
-    for x in range(x_start, img_width):
-        if x == x_start:
-            y = 0
-            current_pixel = numpydata[y][x]
-            continue
-
-        previous_pixel = current_pixel
-        y = y + 1
-        if y > img_height - 1:
-            continue
-
-        current_pixel = numpydata[y][x]
-        different_colour = pixel_comparison(current_pixel, previous_pixel)
-        if different_colour:
-            edges_diag.append([x, y])
-
-# Diagonal scan
-for y_start in range(img_height):
-    for y in range(y_start, img_width):
-        if y == y_start:
-            x = 0
-            current_pixel = numpydata[y][x]
-            continue
-
-        previous_pixel = current_pixel
-        x = x + 1
-        if x > img_width - 1 or y > img_height - 1:
-            continue
-
-        current_pixel = numpydata[y][x]
-        different_colour = pixel_comparison(current_pixel, previous_pixel)
-        if different_colour:
-            edges_diag.append([x, y])
-
-# Diagonal scan
-for x_start in range(img_width-1, 0, -1):
-    for x in range(x_start - 1, 0, -1):
-        if x == x_start - 1:
-            y = 0
-            current_pixel = numpydata[y][x]
-            continue
-
-        previous_pixel = current_pixel
-        y = y + 1
-        if y > img_height - 1:
-            continue
-
-        current_pixel = numpydata[y][x]
-        different_colour = pixel_comparison(current_pixel, previous_pixel)
-        if different_colour:
-            edges_diag.append([x, y])
-
-# Diagonal scan
-for y_start in range(img_height - 1, 0, -1):
-    for y in range(y_start, img_height):
-        if y == y_start:
-            x = img_width - 1
-            current_pixel = numpydata[y][x]
-            continue
-
-        previous_pixel = current_pixel
-        x = x - 1
-        if x > img_width - 1 or y > img_height - 1:
-            continue
-
-        current_pixel = numpydata[y][x]
-        different_colour = pixel_comparison(current_pixel, previous_pixel)
-        if different_colour:
-            edges_diag.append([x, y])
-
-edges_prio_1 = []
-edges_prio_2 = []
-edges_prio_3 = []
-
-#Combine and compile list of cross matches 
-for edge in edges_lat:
-    if edge in edges_diag and edge in edges_rev_lat:
-        edges_prio_1.append(edge)
-    elif edge in edges_diag or edge in edges_rev_lat:
-        edges_prio_2.append(edge)
-    else:
-        edges_prio_3.append(edge)
-
-for edge in edges_diag:
-    if edge in edges_lat and edge in edges_rev_lat:
-        continue
-    elif edge in edges_lat or edge in edges_rev_lat:
-        edges_prio_2.append(edge)
-    else:
-        edges_prio_3.append(edge)
-
-for edge in edges_rev_lat:
-    if edge not in edges_prio_1 and edge not in edges_prio_2:
-        edges_prio_3.append(edge)
-
-edges_prio_1.sort()
-edges_prio_2.sort()
-edges_prio_3.sort()
 list_of_edge_prios = [edges_prio_1, edges_prio_2, edges_prio_3]
-
-#plot of edges
-edges_unique_1 = list(edges_prio_1 for edges_prio_1,_ in itertools.groupby(edges_prio_1))
-edges_unique_2 = list(edges_prio_2 for edges_prio_2,_ in itertools.groupby(edges_prio_2))
-edges_unique_3 = list(edges_prio_3 for edges_prio_3,_ in itertools.groupby(edges_prio_3))
-
-x_cords_3, y_cords_3 = zip(*edges_prio_3)
-plt.scatter(*zip(*edges_prio_3),marker='.', s=0.1, color='green')
-plt.scatter(x_cords_3, y_cords_3, marker='.', s=0.5, color='green')
-x_cords_2, y_cords_2 = zip(*edges_prio_2)
-plt.scatter(*zip(*edges_prio_2),marker='.', s=0.1, color='blue')
-plt.scatter(x_cords_2,y_cords_2,marker='.', s=0.5, color='blue')
-x_cords, y_cords = zip(*edges_prio_1)
-plt.scatter(*zip(*edges_prio_1),marker='.', s=0.1, color='red')
-plt.scatter(x_cords,y_cords,marker='.', s=0.5, color='red')
-plt.gca().invert_yaxis()
-plt.legend()
-plt.show()
 
 lines = []
 used = []
 index_rotation = [0, 1, -1, 2, -2, 3, -3]
 circular_pattern = [[0,-1], [1,-1], [1,0], [1,1], [0,1], [-1,1], [-1,0], [-1,-1]]
-direction_weighting = [100, 80, 80, 60, 60, 40, 40]
-edges_prio_1_weighting = 120
+direction_weighting = [90, 70, 70, 55, 55, 40, 40]
+edges_prio_1_weighting = 125
 edges_prio_2_weighting = 60
 edges_prio_3_weighting = 30
 weighting_threshold = 140
@@ -336,6 +167,3 @@ for line in lines:
         plt.plot(x, y, label = "line {}".format(line[0]) )
 plt.gca().invert_yaxis()
 plt.show()
-
-terminus_points = []
-

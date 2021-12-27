@@ -35,12 +35,6 @@ def colour_match(numpydata, xy, xy_n, tolerance):
     xy_n_pixel = numpydata[xy_n[1]][xy_n[0]]
     return not pixel_comparison(xy_pixel, xy_n_pixel, tolerance)
 
-def edge_variance(pending_edges, delta_trigger):
-    for order, edge in enumerate(pending_edges):
-        if order == 0:
-            current_pixel 
-        
-
 def block_predominant_colour(numpydata, xy, block_size):
     colours = []
     block_width = int(block_size / 2)
