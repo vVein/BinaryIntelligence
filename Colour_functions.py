@@ -1,6 +1,6 @@
 
 from PIL import Image
-from numpy import asarray
+from numpy import asarray, positive
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -36,10 +36,30 @@ def colour_match(numpydata, xy, xy_n, tolerance):
     return not pixel_comparison(xy_pixel, xy_n_pixel, tolerance)
 
 def edge_variance(pending_edges, delta_trigger):
+    number_of_edges = len(pending_edges)
+    
+    if number_of_edges <= 1:
+        return pending_edges
+    
     for order, edge in enumerate(pending_edges):
         if order == 0:
-            current_pixel 
-        
+            current_pixel = edge           
+        else:
+            previous_pixel = current_pixel
+            current_pixel = edge
+            r_delta = previous_pixel[2] - current_pixel[2]
+            g_delta = previous_pixel[3] - current_pixel[3]
+            b_delta = previous_pixel[4] - current_pixel[4]
+            if abs(r_delta) > delta_trigger:
+                if r_delta > 0:
+                    sign = 1
+                elif r_delta < 0:
+                    sign = -1
+            
+            
+            if order == number_of_edges - 1:
+                
+            
 
 def block_predominant_colour(numpydata, xy, block_size):
     colours = []
