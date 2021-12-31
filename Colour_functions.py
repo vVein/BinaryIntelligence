@@ -40,6 +40,10 @@ def edge_variance(pending_edges, delta_trigger):
     
     if number_of_edges <= 1:
         return pending_edges
+    r_signs = []
+    g_signs = []
+    b_signs = []
+    nominated_edges_indices = []
     
     for order, edge in enumerate(pending_edges):
         if order == 0:
@@ -50,17 +54,64 @@ def edge_variance(pending_edges, delta_trigger):
             r_delta = previous_pixel[2] - current_pixel[2]
             g_delta = previous_pixel[3] - current_pixel[3]
             b_delta = previous_pixel[4] - current_pixel[4]
+            
             if abs(r_delta) > delta_trigger:
                 if r_delta > 0:
                     sign = 1
                 elif r_delta < 0:
                     sign = -1
-            
-            
-            if order == number_of_edges - 1:
+                else:
+                    sign = 0
+                r_signs.append(sign)
                 
-            
+            if abs(g_delta) > delta_trigger:
+                if g_delta > 0:
+                    sign = 1
+                elif g_delta < 0:
+                    sign = -1
+                else:
+                    sign = 0
+                g_signs.append(sign)            
 
+            if abs(b_delta) > delta_trigger:
+                if b_delta > 0:
+                    sign = 1
+                elif b_delta < 0:
+                    sign = -1
+                else:
+                    sign = 0
+                b_signs.append(sign)            
+            
+    list_of_signs = [r_signs, g_signs, b_signs]
+    for x_signs in list_of_signs:
+        for order, sign in enumerate(x_signs):
+            if order == 0:
+                current_sign = sign
+            else:
+                previous_sign = current_sign
+                current_sign = sign
+                
+            if previous_sign == 0:
+                continue
+            elif previous_sign == current_sign:
+                continue
+            elif previous_sign == -1:
+                if current_sign == 0 or current_sign == +1:
+                    nominated_edges_indices.append(order)
+            elif previous_sign == +1:
+                if current_sign == 0 or current_sign == -1:
+                    nominated_edges_indices.append(order)
+    
+    unique_nominated_edges_indices = set(nominated_edges_indices)
+    returned_edges = []
+    
+    for order, edge in enumerate(pending_edges):
+        if order in unique_nominated_edges_indices:
+            xy = [edge[0], edge[1]]
+            returned_edges.append(xy)
+    
+    return returned_edges
+                          
 def block_predominant_colour(numpydata, xy, block_size):
     colours = []
     block_width = int(block_size / 2)
