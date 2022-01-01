@@ -2,8 +2,6 @@
 from PIL import Image
 from numpy import asarray
 import matplotlib.pyplot as plt
-import numpy as np
-import itertools
 from Colour_functions import *
 from Edge_detection import *
 
@@ -139,23 +137,16 @@ def start_new_polylines():
                 current_shape.append([xy_n[0], xy_n[1]])
                 used.append([xy[0], xy[1]])
                 used.append([xy_n[0], xy_n[1]])
-                initial_xy = xy
                 new_shape = True
                 delta = [xy_n[0]-xy[0],xy_n[1]-xy[1]]
                 dirct_index = [indx for indx, dirct in enumerate(circular_pattern) if dirct == delta]
                 prev_dirct_index = dirct_index[0]
-                initial_directionional_index = dirct_index[0]
                 last_stored_xy = xy_n
 
         # Add to new polyline            
         if new_shape:
             generate_polyline(start_point, prev_dirct_index, last_stored_xy)
-        
-            # check a second direction    
-            #reverse_initial_direction_index = ( initial_directionional_index + index_cap / 2 ) % index_cap
-       
-            #generate_polyline(initial_xy, reverse_initial_direction_index, initial_xy)
-
+            
             lines.append([shape_no, current_shape])
                 
 start_new_polylines()
