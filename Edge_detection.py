@@ -6,7 +6,7 @@ import numpy as np
 import itertools
 from Colour_functions import *
 
-def image_edge_detection(image_as_numpyarray, RGB_tolerance):
+def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_trigger = 50):
     numpydata = image_as_numpyarray
     
     img_width = int(np.size(numpydata,1))
@@ -18,7 +18,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance):
         
     # Lateral scan (Left ro right)
     for y in range(img_height):
-        previous_check_different = False
+        previous_check_different_colour = False
         for x in range(img_width):
             if x == 0:
                 current_pixel = list(numpydata[y][x])
@@ -29,18 +29,25 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance):
             
             if different_colour:
                 pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])
-                previous_check_different = True
+                previous_check_different_colour = True
             else:
-                if previous_check_different:
-                    returned_edges = edge_variance(pending_edges)
-                    for edge in returned_edges:
-                        edges_lat.append([edge[0], edge[1]])
+                if previous_check_different_colour:
+                    if len(pending_edges) > 1:
+                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger)
+                        for xy in returned_edges:
+                            edges_lat.append(xy)
+                    elif len(pending_edges) == 1:
+                        xy = [pending_edges[0][0], pending_edges[0][1]]
+                        edges_lat.append(xy)
+                    
                     pending_edges = []
-                previous_check_different = False
+                previous_check_different_colour = False
                 
     print('checkmark1')
     # Lateral scan (Top to bottom)
+    pending_edges = []
     for x in range(img_width):
+        previous_check_different_colour = False
         for y in range(img_height):
             if y == 0:
                 current_pixel = list(numpydata[y][x])
@@ -48,8 +55,22 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance):
             previous_pixel = current_pixel
             current_pixel = list(numpydata[y][x])
             different_colour = pixel_comparison_t(current_pixel, previous_pixel, RGB_tolerance)
+            
             if different_colour:
-                edges_lat.append([x, y])
+                pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])
+                previous_check_different_colour = True
+            else:
+                if previous_check_different_colour:
+                    if len(pending_edges) > 1:
+                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger)
+                        for xy in returned_edges:
+                            edges_lat.append(xy)
+                    elif len(pending_edges) == 1:
+                        xy = [pending_edges[0][0], pending_edges[0][1]]
+                        edges_lat.append(xy)
+                    
+                    pending_edges = []
+                previous_check_different_colour = False
 
     print('checkmark2')
     # Reverse Lateral scan (Right to left)

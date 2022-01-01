@@ -4,14 +4,15 @@ from numpy import asarray, positive
 import matplotlib.pyplot as plt
 import numpy as np
 
-tolerance = 140
-
-def pixel_comparison_t(current_pixel, previous_pixel, tolerance = 120):
+def pixel_comparison_t(current_pixel, previous_pixel, individual_threshold = 50, group_threshold = 110):
     comparison1 = abs(int(current_pixel[0]) - int(previous_pixel[0]))
     comparison2 = abs(int(current_pixel[1]) - int(previous_pixel[1]))
     comparison3 = abs(int(current_pixel[2]) - int(previous_pixel[2]))
-    comparison = (comparison1 + comparison2 + comparison3) > tolerance
-    return comparison
+    if any(compar > individual_threshold for compar in [comparison1, comparison2, comparison3] ):
+        return True
+    if (comparison1 + comparison2 + comparison3) > group_threshold:
+        return True
+    return False
 
 def pixel_comparison(p1, p2):
     comparison1 = abs(int(p1[0]) - int(p2[0]))
@@ -37,9 +38,14 @@ def colour_match(numpydata, xy, xy_n, tolerance):
 
 def edge_variance(pending_edges, delta_trigger):
     number_of_edges = len(pending_edges)
+    returned_edges = []
     
     if number_of_edges <= 1:
-        return pending_edges
+        edge = pending_edges[0]
+        xy = [edge[0], edge[1]]
+        returned_edges.append(xy)
+        return returned_edges
+    
     r_signs = []
     g_signs = []
     b_signs = []
@@ -51,9 +57,9 @@ def edge_variance(pending_edges, delta_trigger):
         else:
             previous_pixel = current_pixel
             current_pixel = edge
-            r_delta = previous_pixel[2] - current_pixel[2]
-            g_delta = previous_pixel[3] - current_pixel[3]
-            b_delta = previous_pixel[4] - current_pixel[4]
+            r_delta = int(previous_pixel[2]) - int(current_pixel[2])
+            g_delta = int(previous_pixel[3]) - int(current_pixel[3])
+            b_delta = int(previous_pixel[4]) - int(current_pixel[4])
             
             if abs(r_delta) > delta_trigger:
                 if r_delta > 0:
@@ -87,6 +93,7 @@ def edge_variance(pending_edges, delta_trigger):
         for order, sign in enumerate(x_signs):
             if order == 0:
                 current_sign = sign
+                continue
             else:
                 previous_sign = current_sign
                 current_sign = sign
@@ -102,14 +109,16 @@ def edge_variance(pending_edges, delta_trigger):
                 if current_sign == 0 or current_sign == -1:
                     nominated_edges_indices.append(order)
     
+    if len(nominated_edges_indices) == 0:
+        max_index = len(pending_edges) - 1
+        nominated_edges_indices.append(max_index)
+    
     unique_nominated_edges_indices = set(nominated_edges_indices)
-    returned_edges = []
     
     for order, edge in enumerate(pending_edges):
         if order in unique_nominated_edges_indices:
             xy = [edge[0], edge[1]]
             returned_edges.append(xy)
-    
     return returned_edges
                           
 def block_predominant_colour(numpydata, xy, block_size):
