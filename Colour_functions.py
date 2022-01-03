@@ -32,7 +32,7 @@ def colour_match(numpydata, xy, xy_n, tolerance):
     xy_n_pixel = numpydata[xy_n[1]][xy_n[0]]
     return not pixel_comparison(xy_pixel, xy_n_pixel, tolerance)
 
-def edge_variance(pending_edges, delta_trigger):
+def edge_variance(pending_edges, delta_trigger, numpydata):
     number_of_edges = len(pending_edges)
     returned_edges = []
     
@@ -107,9 +107,21 @@ def edge_variance(pending_edges, delta_trigger):
     
     if len(nominated_edges_indices) == 0:
         max_index = len(pending_edges) - 1
-        nominated_edges_indices.append(max_index)
+        first_entry = pending_edges[0]
+        last_entry = pending_edges[max_index]
+        middle_x = int((first_entry[0] - last_entry[0]) / 2)
+        middle_y = int((first_entry[1] - last_entry[1]) / 2)
+        middle_xy = [middle_x ,middle_y ]
+        weakest_match = weakest_background_match(first_entry, last_entry, block_predominant_colour(numpydata, middle_xy, 6))
+        if weakest_match == first_entry:
+            nominated_edges_indices.append(0)
+        elif weakest_match == last_entry:
+            nominated_edges_indices.append(max_index)
     
     unique_nominated_edges_indices = set(nominated_edges_indices)
+    
+    if pending_edges[0] == [329, 417, 158, 158, 158]:
+        print(pending_edges)
     
     for order, edge in enumerate(pending_edges):
         if order in unique_nominated_edges_indices:
@@ -129,11 +141,13 @@ def block_predominant_colour(numpydata, xy, block_size):
     most_common = max(set(colours), key = colours.count)
     return list(most_common)
 
-def weakest_background_match(pixel_1, pixel_2, predominant_background_pixel):
+def weakest_background_match(edge_1, edge_2, predominant_background_pixel):
+    pixel_1 = [edge_1[2], edge_1[3], edge_1[4]]
+    pixel_2 = [edge_2[2], edge_2[3], edge_2[4]]
     pixel_1_background_delta = pixel_comparison(pixel_1, predominant_background_pixel)
     pixel_2_background_delta = pixel_comparison(pixel_2, predominant_background_pixel)
     if pixel_1_background_delta > pixel_2_background_delta:
-        return list(pixel_1)
+        return list(edge_1)
     else:
-        return list(pixel_2)
+        return list(edge_2)
         
