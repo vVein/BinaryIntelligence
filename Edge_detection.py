@@ -16,10 +16,11 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
     edges_diag_LR = []
     edges_diag_RL = []
     pending_edges = []
-        
+
     # Lateral scan (Left ro right)
     for y in range(img_height):
-        previous_check_different_colour = False
+        pending_edges_active = False
+        pending_r_signs = []
         for x in range(img_width):
             if x == 0:
                 current_pixel = list(numpydata[y][x])
@@ -31,23 +32,35 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
             current_pixel = list(numpydata[y][x])
             different_colour = pixel_comparison_t(current_pixel, previous_pixel, RGB_tolerance)
             
-            if x == 331 and y == 417:
-                print(different_colour, previous_check_different_colour)
+            if different_colour:   
                 
-            if different_colour:
-                if x == 331 and y == 417:
-                    print(x, y, pending_edges)
+                rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                pending_r_signs.append(rgb_signs[0])
                 
-                if not previous_check_different_colour:
+                #split
+                if -1 in pending_r_signs and +1 in pending_r_signs:
+                    returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
+                    for xy in returned_edges:
+                        edges_lat.append(xy)
+                    pending_edges = []
+                    pending_r_signs = []
+                    pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])
+                             
+                if not pending_edges_active:
                     pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
                 
-                pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])                
+                pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])     
                 
-                previous_check_different_colour = True
+
+                
+                if x == 306 and y == 413:
+                    print(x, y, pending_edges)           
+                
+                pending_edges_active = True
                 
             else:
-                if previous_check_different_colour:
-                    if x == 331 and y == 417:
+                if pending_edges_active:
+                    if x == 306 and y == 413:
                         print(x, y, pending_edges)
                     if len(pending_edges) > 1:
                         returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
@@ -58,7 +71,8 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                         edges_lat.append(xy)
                     
                     pending_edges = []
-                previous_check_different_colour = False
+                    pending_r_signs = []
+                pending_edges_active = False
                 
     print('checkmark1')
     # Vertical scan (Top to bottom)
@@ -207,7 +221,6 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                     elif len(pending_edges) == 1:
                         xy = [pending_edges[0][0], pending_edges[0][1]]
                         edges_diag_RL.append(xy)
-                    
                     pending_edges = []
                 previous_check_different_colour = False
 
