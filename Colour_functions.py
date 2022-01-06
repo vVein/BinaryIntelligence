@@ -33,41 +33,40 @@ def colour_match(numpydata, xy, xy_n, tolerance):
     return not pixel_comparison(xy_pixel, xy_n_pixel, tolerance)
 
 def RGB_sign_delta(back_pixel, forward_pixel, delta_trigger = 50):
-    rgb_signs = []
-    r_delta = int(back_pixel[2]) - int(forward_pixel[2])
-    g_delta = int(back_pixel[3]) - int(forward_pixel[3])
-    b_delta = int(back_pixel[4]) - int(forward_pixel[4])
-    
+    r_delta = int(back_pixel[0]) - int(forward_pixel[0])
+    g_delta = int(back_pixel[1]) - int(forward_pixel[1])
+    b_delta = int(back_pixel[2]) - int(forward_pixel[2])
+    r_sign = 0
+    g_sign = 0
+    b_sign = 0
     if abs(r_delta) > delta_trigger:
         if r_delta > 0:
-            sign = 1
+            r_sign = 1
         elif r_delta < 0:
-            sign = -1
+            r_sign = -1
         else:
-            sign = 0
-        rgb_signs.append(sign)
+            r_sign = 0
         
     if abs(g_delta) > delta_trigger:
         if g_delta > 0:
-            sign = 1
+            g_sign = 1
         elif g_delta < 0:
-            sign = -1
+            g_sign = -1
         else:
-            sign = 0
-        rgb_signs.append(sign)            
+            g_sign = 0      
 
     if abs(b_delta) > delta_trigger:
         if b_delta > 0:
-            sign = 1
+            b_sign = 1
         elif b_delta < 0:
-            sign = -1
+            b_sign = -1
         else:
-            sign = 0
-        rgb_signs.append(sign)
+            b_sign = 0
     
-    return rgb_signs
+    return [r_sign, g_sign, b_sign]
 
 def edge_variance(pending_edges, delta_trigger, numpydata):
+    
     number_of_edges = len(pending_edges)
     returned_edges = []
     
@@ -155,8 +154,8 @@ def edge_variance(pending_edges, delta_trigger, numpydata):
     
     unique_nominated_edges_indices = set(nominated_edges_indices)
     
-    if pending_edges[0] == [305, 413, 2, 2, 2]:
-        print(pending_edges, unique_nominated_edges_indices)
+    #if pending_edges[0] == [305, 413, 2, 2, 2]:
+    #    print(pending_edges, unique_nominated_edges_indices)
     
     for order, edge in enumerate(pending_edges):
         if order in unique_nominated_edges_indices:

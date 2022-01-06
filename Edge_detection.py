@@ -16,11 +16,17 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
     edges_diag_LR = []
     edges_diag_RL = []
     pending_edges = []
+    pending_r_signs = []
+    pending_g_signs = []
+    pending_b_signs = []
 
     # Lateral scan (Left ro right)
+    print('checkmark1 lat scan')
     for y in range(img_height):
         pending_edges_active = False
         pending_r_signs = []
+        pending_g_signs = []
+        pending_b_signs = []
         for x in range(img_width):
             if x == 0:
                 current_pixel = list(numpydata[y][x])
@@ -33,35 +39,38 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
             different_colour = pixel_comparison_t(current_pixel, previous_pixel, RGB_tolerance)
             
             if different_colour:   
-                
-                rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
-                pending_r_signs.append(rgb_signs[0])
-                
-                #split
-                if -1 in pending_r_signs and +1 in pending_r_signs:
-                    returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
-                    for xy in returned_edges:
-                        edges_lat.append(xy)
-                    pending_edges = []
-                    pending_r_signs = []
-                    pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])
-                             
                 if not pending_edges_active:
                     pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
                 
-                pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])     
+                rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                   
+                pending_r_signs.append(rgb_signs[0])
+                pending_g_signs.append(rgb_signs[1])
+                pending_b_signs.append(rgb_signs[2])
+                list_of_sign_lists = [pending_r_signs, pending_g_signs, pending_b_signs]
+                # split if signs flip
+                for sign_sublist in list_of_sign_lists:
+                    if -1 in sign_sublist and +1 in sign_sublist:
+                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
+                        for xy in returned_edges:
+                            edges_lat.append(xy)
+                        pending_edges = []
+                        pending_r_signs = []
+                        pending_g_signs = []
+                        pending_b_signs = []
+                        pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
+                        pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])
+                        rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                        pending_r_signs.append(rgb_signs[0])
+                        pending_g_signs.append(rgb_signs[1])
+                        pending_b_signs.append(rgb_signs[2])
+                        break
+                else:
+                    pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])        
                 
-
-                
-                if x == 306 and y == 413:
-                    print(x, y, pending_edges)           
-                
-                pending_edges_active = True
-                
+                pending_edges_active = True   
             else:
                 if pending_edges_active:
-                    if x == 306 and y == 413:
-                        print(x, y, pending_edges)
                     if len(pending_edges) > 1:
                         returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
                         for xy in returned_edges:
@@ -72,9 +81,11 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                     
                     pending_edges = []
                     pending_r_signs = []
+                    pending_g_signs = []
+                    pending_b_signs = []
                 pending_edges_active = False
                 
-    print('checkmark1')
+    print('checkmark2 vert scan')
     # Vertical scan (Top to bottom)
     pending_edges = []
     for x in range(img_width):
@@ -108,7 +119,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                     pending_edges = []
                 previous_check_different_colour = False
 
-    print('checkmark4')
+    print('checkmark3 L-R scan')
     # Diagonal scan L-R
     pending_edges = []
     for x_start in range(img_width):
@@ -147,7 +158,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                     pending_edges = []
                 previous_check_different_colour = False
 
-    print('checkmark5')
+    print('checkmark4 L-R scan pt 2')
     # Diagonal scan L-R
     pending_edges = []
     for y_start in range(img_height):
@@ -186,7 +197,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                     pending_edges = []
                 previous_check_different_colour = False
 
-    print('checkmark6')
+    print('checkmark5 R-L scan')
     # Diagonal scan R-L
     pending_edges = []
     for x_start in range(img_width - 1, 0, -1):
@@ -224,7 +235,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                     pending_edges = []
                 previous_check_different_colour = False
 
-    print('checkmark7')
+    print('checkmark6 R-L scan pt 2')
     # Diagonal scan R-L
     pending_edges = []
     for y_start in range(img_height - 1, 0, -1):
@@ -263,7 +274,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                     pending_edges = []
                 previous_check_different_colour = False
 
-    if 20 == 2:
+    if 2 == 2:
         
         x_cords_3, y_cords_3 = zip(*edges_lat)
         plt.scatter(*zip(*edges_lat),marker='.', s=0.1, color='green')
@@ -310,7 +321,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
         plt.imshow(img)
         plt.show()
 
-    print('checkmark8')
+    print('checkmark7 prio combinations')
     edges_prio_1 = []
     edges_prio_2 = []
     edges_prio_3 = []
