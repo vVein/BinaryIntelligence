@@ -274,7 +274,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                     pending_edges = []
                 previous_check_different_colour = False
 
-    if 2 == 2:
+    if 20 == 2:
         
         x_cords_3, y_cords_3 = zip(*edges_lat)
         plt.scatter(*zip(*edges_lat),marker='.', s=0.1, color='green')
