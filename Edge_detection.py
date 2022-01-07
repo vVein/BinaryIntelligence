@@ -24,6 +24,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
     print('checkmark1 lat scan')
     for y in range(img_height):
         pending_edges_active = False
+        pending_edges = []
         pending_r_signs = []
         pending_g_signs = []
         pending_b_signs = []
@@ -36,7 +37,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
             previous_xy = current_xy
             current_xy = [x, y]
             current_pixel = list(numpydata[y][x])
-            different_colour = pixel_comparison_t(current_pixel, previous_pixel, RGB_tolerance)
+            different_colour = pixel_comparison_t(current_pixel, previous_pixel, singular_RGB_trigger, RGB_tolerance)
             
             if different_colour:   
                 if not pending_edges_active:
@@ -89,7 +90,11 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
     # Vertical scan (Top to bottom)
     pending_edges = []
     for x in range(img_width):
-        previous_check_different_colour = False
+        pending_edges_active = False
+        pending_edges = []
+        pending_r_signs = []
+        pending_g_signs = []
+        pending_b_signs = []
         for y in range(img_height):
             if y == 0:
                 current_pixel = list(numpydata[y][x])
@@ -99,15 +104,42 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
             previous_xy = current_xy
             current_xy = [x, y]
             current_pixel = list(numpydata[y][x])
-            different_colour = pixel_comparison_t(current_pixel, previous_pixel, RGB_tolerance)
+            different_colour = pixel_comparison_t(current_pixel, previous_pixel, singular_RGB_trigger, RGB_tolerance)
             
             if different_colour:
-                if not previous_check_different_colour:
+                if not pending_edges_active:
                     pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
-                pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])
-                previous_check_different_colour = True
+                
+                rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                
+                pending_r_signs.append(rgb_signs[0])
+                pending_g_signs.append(rgb_signs[1])
+                pending_b_signs.append(rgb_signs[2])
+                list_of_sign_lists = [pending_r_signs, pending_g_signs, pending_b_signs]
+                
+                # split if signs flip
+                for sign_sublist in list_of_sign_lists:
+                    if -1 in sign_sublist and +1 in sign_sublist:
+                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
+                        for xy in returned_edges:
+                            edges_vert.append(xy)
+                        pending_edges = []
+                        pending_r_signs = []
+                        pending_g_signs = []
+                        pending_b_signs = []
+                        pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
+                        pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])
+                        rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                        pending_r_signs.append(rgb_signs[0])
+                        pending_g_signs.append(rgb_signs[1])
+                        pending_b_signs.append(rgb_signs[2])
+                        break
+                else:
+                    pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])        
+                
+                pending_edges_active = True   
             else:
-                if previous_check_different_colour:
+                if pending_edges_active:
                     if len(pending_edges) > 1:
                         returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
                         for xy in returned_edges:
@@ -117,13 +149,22 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                         edges_vert.append(xy)
                     
                     pending_edges = []
-                previous_check_different_colour = False
+                    pending_r_signs = []
+                    pending_g_signs = []
+                    pending_b_signs = []
+                pending_edges_active = False
 
     print('checkmark3 L-R scan')
     # Diagonal scan L-R
     pending_edges = []
     for x_start in range(img_width):
-        previous_check_different_colour = False
+        
+        pending_edges_active = False
+        pending_edges = []
+        pending_r_signs = []
+        pending_g_signs = []
+        pending_b_signs = []
+        
         for x in range(x_start, img_width):
             if x == x_start:
                 y = 0
@@ -133,20 +174,48 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
 
             previous_pixel = current_pixel
             previous_xy = current_xy
-            current_xy = [x, y]
+
             y = y + 1
             if y > img_height - 1:
                 continue
-
+            
+            current_xy = [x, y]
             current_pixel = list(numpydata[y][x])
-            different_colour = pixel_comparison_t(current_pixel, previous_pixel, RGB_tolerance)
+            
+            different_colour = pixel_comparison_t(current_pixel, previous_pixel, singular_RGB_trigger, RGB_tolerance)
             if different_colour:
-                if not previous_check_different_colour:
+                if not pending_edges_active:
                     pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
-                pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])
-                previous_check_different_colour = True
+                
+                rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                   
+                pending_r_signs.append(rgb_signs[0])
+                pending_g_signs.append(rgb_signs[1])
+                pending_b_signs.append(rgb_signs[2])
+                list_of_sign_lists = [pending_r_signs, pending_g_signs, pending_b_signs]
+                # split if signs flip
+                for sign_sublist in list_of_sign_lists:
+                    if -1 in sign_sublist and +1 in sign_sublist:
+                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
+                        for xy in returned_edges:
+                            edges_diag_LR.append(xy)
+                        pending_edges = []
+                        pending_r_signs = []
+                        pending_g_signs = []
+                        pending_b_signs = []
+                        pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
+                        pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])
+                        rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                        pending_r_signs.append(rgb_signs[0])
+                        pending_g_signs.append(rgb_signs[1])
+                        pending_b_signs.append(rgb_signs[2])
+                        break
+                else:
+                    pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])        
+                
+                pending_edges_active = True   
             else:
-                if previous_check_different_colour:
+                if pending_edges_active:
                     if len(pending_edges) > 1:
                         returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
                         for xy in returned_edges:
@@ -156,13 +225,22 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                         edges_diag_LR.append(xy)
                     
                     pending_edges = []
-                previous_check_different_colour = False
+                    pending_r_signs = []
+                    pending_g_signs = []
+                    pending_b_signs = []
+                pending_edges_active = False
 
     print('checkmark4 L-R scan pt 2')
     # Diagonal scan L-R
     pending_edges = []
     for y_start in range(img_height):
-        previous_check_different_colour = False
+        
+        pending_edges_active = False
+        pending_edges = []
+        pending_r_signs = []
+        pending_g_signs = []
+        pending_b_signs = []
+        
         for y in range(y_start, img_width):
             if y == y_start:
                 x = 0
@@ -172,20 +250,47 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
 
             previous_pixel = current_pixel
             previous_xy = current_xy
-            current_xy = [x, y]
             x = x + 1
             if x > img_width - 1 or y > img_height - 1:
                 continue
-
+            
+            current_xy = [x, y]
             current_pixel = list(numpydata[y][x])
-            different_colour = pixel_comparison_t(current_pixel, previous_pixel, RGB_tolerance)
+            different_colour = pixel_comparison_t(current_pixel, previous_pixel, singular_RGB_trigger, RGB_tolerance)
             if different_colour:
-                if not previous_check_different_colour:
+                if not pending_edges_active:
                     pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
-                pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])
-                previous_check_different_colour = True
+                
+                rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                   
+                pending_r_signs.append(rgb_signs[0])
+                pending_g_signs.append(rgb_signs[1])
+                pending_b_signs.append(rgb_signs[2])
+                list_of_sign_lists = [pending_r_signs, pending_g_signs, pending_b_signs]
+                
+                # split if signs flip
+                for sign_sublist in list_of_sign_lists:
+                    if -1 in sign_sublist and +1 in sign_sublist:
+                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
+                        for xy in returned_edges:
+                            edges_diag_LR.append(xy)
+                        pending_edges = []
+                        pending_r_signs = []
+                        pending_g_signs = []
+                        pending_b_signs = []
+                        pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
+                        pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])
+                        rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                        pending_r_signs.append(rgb_signs[0])
+                        pending_g_signs.append(rgb_signs[1])
+                        pending_b_signs.append(rgb_signs[2])
+                        break
+                else:
+                    pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])        
+                
+                pending_edges_active = True   
             else:
-                if previous_check_different_colour:
+                if pending_edges_active:
                     if len(pending_edges) > 1:
                         returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
                         for xy in returned_edges:
@@ -195,13 +300,22 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                         edges_diag_LR.append(xy)
                     
                     pending_edges = []
-                previous_check_different_colour = False
+                    pending_r_signs = []
+                    pending_g_signs = []
+                    pending_b_signs = []
+                pending_edges_active = False
 
     print('checkmark5 R-L scan')
     # Diagonal scan R-L
     pending_edges = []
     for x_start in range(img_width - 1, 0, -1):
-        previous_check_different_colour = False
+        
+        pending_edges_active = False
+        pending_edges = []
+        pending_r_signs = []
+        pending_g_signs = []
+        pending_b_signs = []
+        
         for x in range(x_start - 1, 0, -1):
             if x == x_start - 1:
                 y = 0
@@ -211,58 +325,47 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
 
             previous_pixel = current_pixel
             previous_xy = current_xy
-            current_xy = [x, y]
+            
             y = y + 1
             if y > img_height - 1:
                 continue
-
+            current_xy = [x, y]
             current_pixel = list(numpydata[y][x])
-            different_colour = pixel_comparison_t(current_pixel, previous_pixel, RGB_tolerance)
+            different_colour = pixel_comparison_t(current_pixel, previous_pixel, singular_RGB_trigger, RGB_tolerance)
             if different_colour:
-                if not previous_check_different_colour:
+                if not pending_edges_active:
                     pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
-                pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])
-                previous_check_different_colour = True
-            else:
-                if previous_check_different_colour:
-                    if len(pending_edges) > 1:
+                
+                rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                   
+                pending_r_signs.append(rgb_signs[0])
+                pending_g_signs.append(rgb_signs[1])
+                pending_b_signs.append(rgb_signs[2])
+                list_of_sign_lists = [pending_r_signs, pending_g_signs, pending_b_signs]
+                
+                # split if signs flip
+                for sign_sublist in list_of_sign_lists:
+                    if -1 in sign_sublist and +1 in sign_sublist:
                         returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
                         for xy in returned_edges:
                             edges_diag_RL.append(xy)
-                    elif len(pending_edges) == 1:
-                        xy = [pending_edges[0][0], pending_edges[0][1]]
-                        edges_diag_RL.append(xy)
-                    pending_edges = []
-                previous_check_different_colour = False
-
-    print('checkmark6 R-L scan pt 2')
-    # Diagonal scan R-L
-    pending_edges = []
-    for y_start in range(img_height - 1, 0, -1):
-        previous_check_different_colour = False
-        for y in range(y_start, img_height):
-            if y == y_start:
-                x = img_width - 1
-                current_pixel = list(numpydata[y][x])
-                current_xy = [x, y]
-                continue
-
-            previous_pixel = current_pixel
-            previous_xy = current_xy
-            current_xy = [x, y]
-            x = x - 1
-            if x > img_width - 1 or y > img_height - 1:
-                continue
-
-            current_pixel = list(numpydata[y][x])
-            different_colour = pixel_comparison_t(current_pixel, previous_pixel, RGB_tolerance)
-            if different_colour:
-                if not previous_check_different_colour:
-                    pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
-                pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])
-                previous_check_different_colour = True
+                        pending_edges = []
+                        pending_r_signs = []
+                        pending_g_signs = []
+                        pending_b_signs = []
+                        pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
+                        pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])
+                        rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                        pending_r_signs.append(rgb_signs[0])
+                        pending_g_signs.append(rgb_signs[1])
+                        pending_b_signs.append(rgb_signs[2])
+                        break
+                else:
+                    pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])        
+                
+                pending_edges_active = True   
             else:
-                if previous_check_different_colour:
+                if pending_edges_active:
                     if len(pending_edges) > 1:
                         returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
                         for xy in returned_edges:
@@ -272,7 +375,85 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                         edges_diag_RL.append(xy)
                     
                     pending_edges = []
-                previous_check_different_colour = False
+                    pending_r_signs = []
+                    pending_g_signs = []
+                    pending_b_signs = []
+                pending_edges_active = False
+
+    print('checkmark6 R-L scan pt 2')
+    # Diagonal scan R-L
+    pending_edges = []
+    for y_start in range(img_height - 1, 0, -1):
+        
+        pending_edges_active = False
+        pending_edges = []
+        pending_r_signs = []
+        pending_g_signs = []
+        pending_b_signs = []
+        
+        for y in range(y_start, img_height):
+            if y == y_start:
+                x = img_width - 1
+                current_pixel = list(numpydata[y][x])
+                current_xy = [x, y]
+                continue
+
+            previous_pixel = current_pixel
+            previous_xy = current_xy
+            x = x - 1
+            if x > img_width - 1 or y > img_height - 1:
+                continue
+            
+            current_xy = [x, y]
+            current_pixel = list(numpydata[y][x])
+            different_colour = pixel_comparison_t(current_pixel, previous_pixel, singular_RGB_trigger, RGB_tolerance)
+            if different_colour:
+                if not pending_edges_active:
+                    pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
+                
+                rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                   
+                pending_r_signs.append(rgb_signs[0])
+                pending_g_signs.append(rgb_signs[1])
+                pending_b_signs.append(rgb_signs[2])
+                list_of_sign_lists = [pending_r_signs, pending_g_signs, pending_b_signs]
+                
+                # split if signs flip
+                for sign_sublist in list_of_sign_lists:
+                    if -1 in sign_sublist and +1 in sign_sublist:
+                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
+                        for xy in returned_edges:
+                            edges_diag_RL.append(xy)
+                        pending_edges = []
+                        pending_r_signs = []
+                        pending_g_signs = []
+                        pending_b_signs = []
+                        pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
+                        pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])
+                        rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                        pending_r_signs.append(rgb_signs[0])
+                        pending_g_signs.append(rgb_signs[1])
+                        pending_b_signs.append(rgb_signs[2])
+                        break
+                else:
+                    pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])        
+                
+                pending_edges_active = True   
+            else:
+                if pending_edges_active:
+                    if len(pending_edges) > 1:
+                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
+                        for xy in returned_edges:
+                            edges_diag_RL.append(xy)
+                    elif len(pending_edges) == 1:
+                        xy = [pending_edges[0][0], pending_edges[0][1]]
+                        edges_diag_RL.append(xy)
+                    
+                    pending_edges = []
+                    pending_r_signs = []
+                    pending_g_signs = []
+                    pending_b_signs = []
+                pending_edges_active = False
 
     if 20 == 2:
         
