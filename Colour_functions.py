@@ -27,6 +27,30 @@ def weighted_colour_match(numpydata, xy_1, xy_2):
     weight = int(max( 90 - comparison / 2, 0))
     return weight
 
+def weighted_perpendicular_colour_match(numpydata, circular_pattern, back_xy, forward_xy, previous_direction_index, proposed_direction_index):
+    previous_perpendicular_coordinate_adjustment_left_index = ( previous_direction_index - 2 ) % 8
+    previous_perpendicular_coordinate_adjustment_right_index = ( previous_direction_index + 2 ) % 8
+    previous_perpendicular_coordinate_adjustment_left = circular_pattern[previous_perpendicular_coordinate_adjustment_left_index]
+    previous_perpendicular_coordinate_adjustment_right = circular_pattern[previous_perpendicular_coordinate_adjustment_right_index]
+    previous_left_xy = [back_xy[0] + previous_perpendicular_coordinate_adjustment_left[0], back_xy[1] + previous_perpendicular_coordinate_adjustment_left[1]]
+    previous_right_xy = [back_xy[0] + previous_perpendicular_coordinate_adjustment_right[0], back_xy[1] + previous_perpendicular_coordinate_adjustment_right[1]]
+    previous_left_rgb = numpydata[previous_left_xy[1]][previous_left_xy[0]]
+    previous_right_rgb = numpydata[previous_right_xy[1]][previous_right_xy[0]]
+    proposed_perpendicular_coordinate_adjustment_left_index = ( proposed_direction_index - 2 ) % 8
+    proposed_perpendicular_coordinate_adjustment_right_index = ( proposed_direction_index + 2 ) % 8
+    proposed_perpendicular_coordinate_adjustment_left = circular_pattern[proposed_perpendicular_coordinate_adjustment_left_index]
+    proposed_perpendicular_coordinate_adjustment_right = circular_pattern[proposed_perpendicular_coordinate_adjustment_right_index]
+    proposed_left_xy = [forward_xy[0] + proposed_perpendicular_coordinate_adjustment_left[0], forward_xy[1] + proposed_perpendicular_coordinate_adjustment_left[1]]
+    proposed_right_xy = [forward_xy[0] + proposed_perpendicular_coordinate_adjustment_right[0], forward_xy[1] + proposed_perpendicular_coordinate_adjustment_right[1]]
+    proposed_left_rgb = numpydata[proposed_left_xy[1]][proposed_left_xy[0]]
+    proposed_right_rgb = numpydata[proposed_right_xy[1]][proposed_right_xy[0]]
+    delta_left_rgb = pixel_comparison(previous_left_rgb, proposed_left_rgb)
+    delta_right_rgb = pixel_comparison(previous_right_rgb, proposed_right_rgb)
+    weighting_l = int(max( 60 - delta_left_rgb, 0))
+    weighting_r = int(max( 60 - delta_right_rgb, 0))
+    weighting = weighting_l + weighting_r
+    return weighting
+
 def colour_match(numpydata, xy, xy_n, tolerance):
     xy_pixel = numpydata[xy[1]][xy[0]]
     xy_n_pixel = numpydata[xy_n[1]][xy_n[0]]

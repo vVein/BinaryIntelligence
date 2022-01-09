@@ -16,7 +16,7 @@ lines = []
 used = []
 index_rotation = [0, 1, -1, 2, -2, 3, -3]
 circular_pattern = [[0,-1], [1,-1], [1,0], [1,1], [0,1], [-1,1], [-1,0], [-1,-1]]
-direction_weighting = [90, 70, 70, 55, 55, 40, 40]
+direction_weighting = [70, 50, 50, 35, 35, 20, 20]
 edges_prio_1_weighting = 125
 edges_prio_2_weighting = 60
 edges_prio_3_weighting = 30
@@ -42,8 +42,11 @@ def generate_polyline(start_point, prev_dirct_index, last_stored_xy):
             direction = circular_pattern[applied_index]
             adjacent_pixel = [xy[0] + direction[0], xy[1] + direction[1]]
             
+            weighted_perpendicular_colour_match_value = weighted_perpendicular_colour_match(numpydata, circular_pattern, xy, adjacent_pixel, 
+                                                                                            prev_dirct_index, applied_index)
+            
             if adjacent_pixel == start_point and len(current_shape) > 12:
-                pixel_weight = edges_prio_1_weighting * 10
+                pixel_weight = edges_prio_1_weighting + weighted_colour_match(numpydata, xy, adjacent_pixel) + directional_weighting + 5 + weighted_perpendicular_colour_match_value
                 surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
                 continue
                         
@@ -53,13 +56,13 @@ def generate_polyline(start_point, prev_dirct_index, last_stored_xy):
             directional_weighting = direction_weighting[n]
                 
             if adjacent_pixel in edges_prio_1:
-                pixel_weight = edges_prio_1_weighting + weighted_colour_match(numpydata, xy, adjacent_pixel) + directional_weighting
+                pixel_weight = edges_prio_1_weighting + weighted_colour_match(numpydata, xy, adjacent_pixel) + directional_weighting + weighted_perpendicular_colour_match_value
                 surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
             elif adjacent_pixel in edges_prio_2:
-                pixel_weight = edges_prio_1_weighting + weighted_colour_match(numpydata, xy, adjacent_pixel) + directional_weighting
+                pixel_weight = edges_prio_1_weighting + weighted_colour_match(numpydata, xy, adjacent_pixel) + directional_weighting + weighted_perpendicular_colour_match_value
                 surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
             elif adjacent_pixel in edges_prio_3:
-                pixel_weight = edges_prio_1_weighting + weighted_colour_match(numpydata, xy, adjacent_pixel) + directional_weighting
+                pixel_weight = edges_prio_1_weighting + weighted_colour_match(numpydata, xy, adjacent_pixel) + directional_weighting + weighted_perpendicular_colour_match_value
                 surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])       
         
         if len(surrounding_pixels_weighted) == 0:
@@ -138,7 +141,7 @@ def start_new_polylines():
                 used.append([xy[0], xy[1]])
                 used.append([xy_n[0], xy_n[1]])
                 new_shape = True
-                delta = [xy_n[0]-xy[0],xy_n[1]-xy[1]]
+                delta = [xy_n[0] - xy[0], xy_n[1] - xy[1]]
                 dirct_index = [indx for indx, dirct in enumerate(circular_pattern) if dirct == delta]
                 prev_dirct_index = dirct_index[0]
                 last_stored_xy = xy_n
@@ -148,13 +151,16 @@ def start_new_polylines():
             generate_polyline(start_point, prev_dirct_index, last_stored_xy)
             
             lines.append([shape_no, current_shape])
-                
+print('checkmark12 polyline')                
 start_new_polylines()
-
+print('checkmark14 polylines generated')
 # exclude 1 & 2 point lines
 for line in lines:
     if len(line[1]) > 6:
         x, y = map(list, zip(*line[1]))
         plt.plot(x, y, label = "line {}".format(line[0]) )
 plt.gca().invert_yaxis()
+#img = Image.fromarray(numpydata, 'RGB')
+#img.save('my.png')
+#plt.imshow(img)
 plt.show()
