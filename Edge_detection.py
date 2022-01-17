@@ -586,4 +586,4 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
     plt.show()
     print('checkmark11')
 
-    return edges_prio_1, edges_prio_2, edges_prio_3
+    return edges_prio_1, edges_prio_2, edges_prio_3, edges_lat

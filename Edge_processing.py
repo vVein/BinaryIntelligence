@@ -1,11 +1,12 @@
 
 import matplotlib.pyplot as plt
+from PIL import Image
 from Colour_functions import *
 plt.rcParams['axes.facecolor'] = 'white'
 plt.rcParams['figure.facecolor'] = 'white'
 
 # Lateral scan reduction (Left ro right)
-def edge_processing(numpydata, edges_lat, singular_RGB_trigger, RGB_tolerance):
+def lat_edge_processing(numpydata, edges_lat, singular_RGB_trigger, RGB_tolerance):
     reduced_edges = []
     previous_xy = 0
     for xy in edges_lat:
@@ -47,3 +48,13 @@ def edge_processing(numpydata, edges_lat, singular_RGB_trigger, RGB_tolerance):
                 
             else:
                 reduced_edges.append(previous_xy)
+                
+    x_cords_3, y_cords_3 = zip(*reduced_edges)
+    plt.scatter(*zip(*reduced_edges),marker='.', s=0.1, color='green')
+    plt.scatter(x_cords_3, y_cords_3, marker='.', s=0.5, color='green')
+    plt.gca().invert_yaxis()
+    plt.legend()
+    img = Image.fromarray(numpydata, 'RGB')
+    img.save('my.png')
+    plt.imshow(img)
+    plt.show()
