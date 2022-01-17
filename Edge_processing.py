@@ -8,10 +8,11 @@ plt.rcParams['figure.facecolor'] = 'white'
 # Lateral scan reduction (Left ro right)
 def lat_edge_processing(numpydata, edges_lat, singular_RGB_trigger, RGB_tolerance):
     reduced_edges = []
-    previous_xy = 0
+    first = True
     for xy in edges_lat:
-        if previous_xy == 0:
+        if first:
             current_xy = xy
+            first = False
         else:
             previous_xy = current_xy
             current_xy = xy
@@ -48,7 +49,7 @@ def lat_edge_processing(numpydata, edges_lat, singular_RGB_trigger, RGB_toleranc
                 
             else:
                 reduced_edges.append(previous_xy)
-                
+       
     x_cords_3, y_cords_3 = zip(*reduced_edges)
     plt.scatter(*zip(*reduced_edges),marker='.', s=0.1, color='green')
     plt.scatter(x_cords_3, y_cords_3, marker='.', s=0.5, color='green')
