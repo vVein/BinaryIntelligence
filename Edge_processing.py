@@ -25,15 +25,30 @@ def lat_edge_processing(numpydata, edges_lat, singular_RGB_trigger, RGB_toleranc
                 
                 if not different_colour:
                     width = current_x - previous_x
+                    
+                    if width == 1:
+                            reduced_edges.append(mid_xy)
+                            continue
+                    
                     mid_x = previous_x + width / 2
                     mid_xy = [mid_x, current_xy[1]]
                     
-                    if width == 1:
-                        reduced_edges.append(mid_xy)
-                        continue
-                    
-                    middle_pixel = list(numpydata[mid_xy[1]][mid_xy[0]])
-                    different_colour = pixel_comparison_t(current_pixel, middle_pixel, singular_RGB_trigger, RGB_tolerance)
+                    # even width
+                    if width % 2 == 0:
+                        middle_pixel = list(numpydata[mid_xy[1]][mid_xy[0]])
+                        different_colour = pixel_comparison_t(current_pixel, middle_pixel, singular_RGB_trigger, RGB_tolerance)
+                        
+                    # odd width   
+                    else:                      
+                        mid_x1 = previous_x + 0.5 + width / 2
+                        mid_x2 = previous_x - 0.5 + width / 2
+                        mid_xy1 = [mid_x1, current_xy[1]]
+                        mid_xy2 = [mid_x2, current_xy[1]]
+                        middle_pixel1 = list(numpydata[mid_xy1[1]][mid_xy1[0]])
+                        middle_pixel2 = list(numpydata[mid_xy2[1]][mid_xy2[0]])
+                        different_colour1 = pixel_comparison_t(current_pixel, middle_pixel1, singular_RGB_trigger, RGB_tolerance)
+                        different_colour2 = pixel_comparison_t(current_pixel, middle_pixel2, singular_RGB_trigger, RGB_tolerance)
+                        different_colour = any(different_colour1, different_colour2)
                     
                     if not different_colour:
                         reduced_edges.append(mid_xy)
