@@ -12,7 +12,7 @@ numpydata = asarray(img)
 
 edges_prio_1, edges_prio_2, edges_prio_3, edges_lat = image_edge_detection(numpydata)
 
-lat_edge_processing(numpydata, edges_lat, 50, 120)
+lat_edge_processing(numpydata, edges_lat, 50, 120, 5)
 
 list_of_edge_prios = [edges_prio_1, edges_prio_2, edges_prio_3]
 

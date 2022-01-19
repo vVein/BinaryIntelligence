@@ -563,27 +563,28 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
 
     print('checkmark10')
     
-    edges_prio_1.sort()
-    edges_prio_2.sort()
-    edges_prio_3.sort()
+    if 20 == 2:
+        edges_prio_1.sort()
+        edges_prio_2.sort()
+        edges_prio_3.sort()
 
-    #plot of edges
+        #plot of edges
 
-    x_cords_3, y_cords_3 = zip(*edges_prio_3)
-    plt.scatter(*zip(*edges_prio_3),marker='.', s=0.1, color='green')
-    plt.scatter(x_cords_3, y_cords_3, marker='.', s=0.5, color='green')
-    x_cords_2, y_cords_2 = zip(*edges_prio_2)
-    plt.scatter(*zip(*edges_prio_2),marker='.', s=0.1, color='blue')
-    plt.scatter(x_cords_2,y_cords_2,marker='.', s=0.5, color='blue')
-    x_cords, y_cords = zip(*edges_prio_1)
-    plt.scatter(*zip(*edges_prio_1),marker='.', s=0.1, color='red')
-    plt.scatter(x_cords,y_cords,marker='.', s=0.5, color='red')
-    plt.gca().invert_yaxis()
-    plt.legend()
-    img = Image.fromarray(numpydata, 'RGB')
-    img.save('my.png')
-    plt.imshow(img)
-    plt.show()
-    print('checkmark11')
+        x_cords_3, y_cords_3 = zip(*edges_prio_3)
+        plt.scatter(*zip(*edges_prio_3),marker='.', s=0.1, color='green')
+        plt.scatter(x_cords_3, y_cords_3, marker='.', s=0.5, color='green')
+        x_cords_2, y_cords_2 = zip(*edges_prio_2)
+        plt.scatter(*zip(*edges_prio_2),marker='.', s=0.1, color='blue')
+        plt.scatter(x_cords_2,y_cords_2,marker='.', s=0.5, color='blue')
+        x_cords, y_cords = zip(*edges_prio_1)
+        plt.scatter(*zip(*edges_prio_1),marker='.', s=0.1, color='red')
+        plt.scatter(x_cords,y_cords,marker='.', s=0.5, color='red')
+        plt.gca().invert_yaxis()
+        plt.legend()
+        img = Image.fromarray(numpydata, 'RGB')
+        img.save('my.png')
+        plt.imshow(img)
+        plt.show()
+        print('checkmark11')
 
     return edges_prio_1, edges_prio_2, edges_prio_3, edges_lat
