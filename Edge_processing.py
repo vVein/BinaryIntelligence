@@ -61,7 +61,7 @@ def lat_edge_processing(numpydata, edges_lat, singular_RGB_trigger, RGB_toleranc
                             if not different_colour:
                                 reduced_lat_edges.append(mid_xy)
                                 skip_next = True
-                                continue
+                                continue                                                  
                             
                         else:
                             remaining_lat_edges.append(previous_xy)
@@ -349,7 +349,7 @@ def diag_RL_edge_processing(numpydata, edges_diag_RL, singular_RGB_trigger, RGB_
             else:
                 skip_next = False
     
-    if 2 == 2:
+    if 20 == 2:
         x_cords_2, y_cords_2 = zip(*reduced_diag_RL_edges)
         plt.scatter(*zip(*reduced_diag_RL_edges),marker='.', s=0.1, color='green')
         plt.scatter(x_cords_2, y_cords_2, marker='.', s=0.5, color='green')
@@ -416,9 +416,9 @@ def edge_prioritisation(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_d
             if edge not in edges_vert:
                 if edge in edges_diag_RL:
                     edges_prio_2.append(edge)
-                continue
-            else:
-                edges_prio_3.append(edge)  
+                    continue
+                else:
+                    edges_prio_3.append(edge)  
 
     for edge in edges_diag_RL:
         if edge not in edges_lat:
