@@ -7,6 +7,8 @@ plt.rcParams['figure.facecolor'] = 'white'
 
 # Lateral scan reduction (Left ro right)
 def lat_edge_processing(numpydata, edges_lat, singular_RGB_trigger, RGB_tolerance, width_threshold):
+    void_buffer_lat = []
+    void_buffer_adjustments = [-1.5, -1, -0.5, 0.5, 1, 1.5]
     reduced_lat_edges = []
     remaining_lat_edges = []
     first = True
@@ -35,6 +37,9 @@ def lat_edge_processing(numpydata, edges_lat, singular_RGB_trigger, RGB_toleranc
                         if width == 1:
                             reduced_lat_edges.append(mid_xy)
                             skip_next = True
+                            for x_adj in void_buffer_adjustments:
+                                void_point = [mid_x + x_adj, current_xy[1]]
+                                void_buffer_lat.append(void_point)
                             continue
                         
                         if width < width_threshold:
@@ -61,6 +66,9 @@ def lat_edge_processing(numpydata, edges_lat, singular_RGB_trigger, RGB_toleranc
                             if not different_colour:
                                 reduced_lat_edges.append(mid_xy)
                                 skip_next = True
+                                for x_adj in void_buffer_adjustments:
+                                    void_point = [mid_x + x_adj, current_xy[1]]
+                                    void_buffer_lat.append(void_point)
                                 continue                                                  
                             
                         else:
@@ -76,8 +84,8 @@ def lat_edge_processing(numpydata, edges_lat, singular_RGB_trigger, RGB_toleranc
                 skip_next = False
     
     if 20 == 2:
-        x_cords_3, y_cords_3 = zip(*reduced_lat_edges)
-        plt.scatter(*zip(*reduced_lat_edges),marker='.', s=0.1, color='green')
+        x_cords_3, y_cords_3 = zip(*void_buffer_lat)
+        plt.scatter(*zip(*void_buffer_lat),marker='.', s=0.1, color='green')
         plt.scatter(x_cords_3, y_cords_3, marker='.', s=0.5, color='green')
         plt.gca().invert_yaxis()
         plt.legend()
@@ -86,9 +94,11 @@ def lat_edge_processing(numpydata, edges_lat, singular_RGB_trigger, RGB_toleranc
         plt.imshow(img)
         plt.show()
     
-    return reduced_lat_edges, remaining_lat_edges
+    return reduced_lat_edges, remaining_lat_edges, void_buffer_lat
 
 def vert_edge_processing(numpydata, edges_vert, singular_RGB_trigger, RGB_tolerance, height_threshold):
+    void_buffer_vert = []
+    void_buffer_adjustments = [-1.5, -1, -0.5, 0.5, 1, 1.5]
     reduced_vert_edges = []
     remaining_vert_edges = []
     first = True
@@ -117,6 +127,9 @@ def vert_edge_processing(numpydata, edges_vert, singular_RGB_trigger, RGB_tolera
                         if height == 1:
                             reduced_vert_edges.append(mid_xy)
                             skip_next = True
+                            for y_adj in void_buffer_adjustments:
+                                void_point = [current_xy[0], mid_y + y_adj]
+                                void_buffer_vert.append(void_point)
                             continue
                         
                         if height < height_threshold:
@@ -143,6 +156,9 @@ def vert_edge_processing(numpydata, edges_vert, singular_RGB_trigger, RGB_tolera
                             if not different_colour:
                                 reduced_vert_edges.append(mid_xy)
                                 skip_next = True
+                                for y_adj in void_buffer_adjustments:
+                                    void_point = [current_xy[0], mid_y + y_adj]
+                                    void_buffer_vert.append(void_point)
                                 continue
                             
                         else:
@@ -158,8 +174,8 @@ def vert_edge_processing(numpydata, edges_vert, singular_RGB_trigger, RGB_tolera
                 skip_next = False
     
     if 20 == 2:
-        x_cords_2, y_cords_2 = zip(*reduced_vert_edges)
-        plt.scatter(*zip(*reduced_vert_edges),marker='.', s=0.1, color='green')
+        x_cords_2, y_cords_2 = zip(*void_buffer_vert)
+        plt.scatter(*zip(*void_buffer_vert),marker='.', s=0.1, color='green')
         plt.scatter(x_cords_2, y_cords_2, marker='.', s=0.5, color='green')
         x_cords_1, y_cords_1 = zip(*remaining_vert_edges)
         plt.scatter(*zip(*remaining_vert_edges),marker='.', s=0.1, color='blue')
@@ -171,7 +187,7 @@ def vert_edge_processing(numpydata, edges_vert, singular_RGB_trigger, RGB_tolera
         plt.imshow(img)
         plt.show()
     
-    return reduced_vert_edges, remaining_vert_edges
+    return reduced_vert_edges, remaining_vert_edges, void_buffer_vert
 
 def diag_LR_edge_processing(numpydata, edges_diag_LR, singular_RGB_trigger, RGB_tolerance, height_threshold):
     reduced_diag_LR_edges = []
@@ -364,6 +380,41 @@ def diag_RL_edge_processing(numpydata, edges_diag_RL, singular_RGB_trigger, RGB_
         plt.show()
     
     return reduced_diag_RL_edges, remaining_diag_RL_edges
+
+# redundant remove
+def remove_void_edges(remaining_edges, void_buffer):
+    cleaned_list = []
+    for edge in remaining_edges:
+        if edge in void_buffer:
+            continue
+        else:
+            cleaned_list.append(edge)
+    return cleaned_list
+
+def secondary_edge_reduction (numpydata, master_list, singular_RGB_trigger, RGB_tolerance):
+    cleaned_list = []
+    master_list_x_sort = sorted(master_list, key=lambda x: (x[1], x[0]))
+    for xy in master_list_x_sort:
+        x = xy[0]
+        test_depth = 2.5
+        hold = []
+        for increment in range(0.5, test_depth, 0.5):                  
+            adjacent_x = x + increment
+            adjacent_xy = [adjacent_x, xy[1]]
+            if adjacent_xy in master_list:
+                hold.append(adjacent_xy)
+        if len(hold) >= 1:
+            start_x = x - 2
+            start_xy = [start_x, xy[1]]
+            next_x = x + 1
+            current_pixel = list(numpydata[xy[1]][start_x])
+            next_pixel = list(numpydata[xy[1]][next_x])
+            different_colour = pixel_comparison_t(current_pixel, next_pixel, singular_RGB_trigger, RGB_tolerance)
+            
+            
+        else:
+            cleaned_list.append(xy)
+        
     
 def edge_prioritisation(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_diag_RL):
     
