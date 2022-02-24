@@ -11,7 +11,7 @@ direction_weighting = [70, 50, 50, 35, 35, 20, 20]
 edges_prio_1_weighting = 125
 edges_prio_2_weighting = 60
 edges_prio_3_weighting = 30
-weighting_threshold = 300
+weighting_threshold = 140
 index_cap = len(index_rotation) + 1
 shape_no = 0
 current_shape = []
@@ -26,7 +26,7 @@ def generate_lines(numpydata, edges_prio_1, edges_prio_2, edges_prio_3):
         while suitable_matches and not completed_loop:
             
             xy = last_stored_xy
-            
+                
             # build list of suitable surrounding points and select best match  
             surrounding_pixels_weighted = []
             for n, index_adj in enumerate(index_rotation):
@@ -34,21 +34,11 @@ def generate_lines(numpydata, edges_prio_1, edges_prio_2, edges_prio_3):
                 direction = circular_pattern[applied_index]
                 adjacent_pixel = [xy[0] + direction[0], xy[1] + direction[1]]
                 
-                left_colour_match_weighting = weighted_left_colour_match(numpydata, circular_pattern, xy, adjacent_pixel, prev_dirct_index, applied_index)
-                right_colour_match_weighting = weighted_right_colour_match(numpydata, circular_pattern, xy, adjacent_pixel, prev_dirct_index, applied_index)  
-                
-                if left_colour_match_weighting < 170 and right_colour_match_weighting < 170:
-                    continue
-                
-                colour_match_weighting = weighted_colour_match(numpydata, xy, adjacent_pixel)
-                
-                if colour_match_weighting < 140:
-                    continue
-                
-                weighted_perpendicular_colour_match_value = left_colour_match_weighting + right_colour_match_weighting
+                weighted_perpendicular_colour_match_value = weighted_perpendicular_colour_match(numpydata, circular_pattern, xy, adjacent_pixel, 
+                                                                                prev_dirct_index, applied_index)
                 
                 if adjacent_pixel == start_point and len(current_shape) > 12:
-                    pixel_weight = edges_prio_1_weighting + colour_match_weighting + directional_weighting + 5 + weighted_perpendicular_colour_match_value
+                    pixel_weight = edges_prio_1_weighting + weighted_colour_match(numpydata, xy, adjacent_pixel) + directional_weighting + 5 + weighted_perpendicular_colour_match_value
                     surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
                     continue
                             
@@ -115,7 +105,6 @@ def generate_lines(numpydata, edges_prio_1, edges_prio_2, edges_prio_3):
                     if adjacent_pixel in used:
                         surrounding_pixel_in_used = True
                         break
-                    
                     if adjacent_pixel in edges_prio_1:
                         pixel_weight = edges_prio_1_weighting + weighted_colour_match(numpydata, xy, adjacent_pixel)
                         surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
@@ -161,14 +150,14 @@ def generate_lines(numpydata, edges_prio_1, edges_prio_2, edges_prio_3):
 
     print('checkmark14 polylines generated')
 
-    if 2 == 2:
+    if 20 == 2:
         # exclude 1 & 2 point lines
         for line in lines:
             if len(line[1]) > 6:
                 x, y = map(list, zip(*line[1]))
                 plt.plot(x, y, label = "line {}".format(line[0]) )
         plt.gca().invert_yaxis()
-        img = Image.fromarray(numpydata, 'RGB')
-        img.save('my.png')
-        plt.imshow(img)
+        #img = Image.fromarray(numpydata, 'RGB')
+        #img.save('my.png')
+        #plt.imshow(img)
         plt.show()

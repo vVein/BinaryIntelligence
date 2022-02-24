@@ -398,7 +398,7 @@ def diag_RL_edge_processing(numpydata, edges_diag_RL, singular_RGB_trigger, RGB_
 
 def secondary_edge_reduction (numpydata, master_list, singular_RGB_trigger, RGB_tolerance):
     cleaned_list = []
-    master_list_x_sort = sorted(master_list, key = lambda x: (x[1], x[0]))
+    master_list_x_sort = sorted(master_list, key=lambda x: (x[1], x[0]))
     for xy in master_list_x_sort:
         x = xy[0]
         test_depth = 2.5
@@ -409,18 +409,12 @@ def secondary_edge_reduction (numpydata, master_list, singular_RGB_trigger, RGB_
             if adjacent_xy in master_list:
                 hold.append(adjacent_xy)
         if len(hold) >= 1:
-            # Are there 2 seperate colour changes in this (hold) stretch
-            
-            # check its an integer, partial coords can't have their colour called
-            if int(x) != x:
-                x = x - 0.5
             start_x = x - 2
-            
-            for add in range(6):
-                next_x = x + add
-                current_pixel = list(numpydata[xy[1]][start_x])
-                next_pixel = list(numpydata[xy[1]][next_x])
-                different_colour = pixel_comparison_t(current_pixel, next_pixel, singular_RGB_trigger, RGB_tolerance)
+            start_xy = [start_x, xy[1]]
+            next_x = x + 1
+            current_pixel = list(numpydata[xy[1]][start_x])
+            next_pixel = list(numpydata[xy[1]][next_x])
+            different_colour = pixel_comparison_t(current_pixel, next_pixel, singular_RGB_trigger, RGB_tolerance)
             
             
         else:
