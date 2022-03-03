@@ -7,7 +7,7 @@ lines = []
 used = []
 index_rotation = [0, 1, -1, 2, -2, 3, -3]
 circular_pattern = [[0,-1], [1,-1], [1,0], [1,1], [0,1], [-1,1], [-1,0], [-1,-1]]
-direction_weighting = [70, 50, 50, 35, 35, 20, 20]
+direction_weighting = [50, 40, 40, 30, 30, 20, 20]
 edges_prio_1_weighting = 125
 edges_prio_2_weighting = 60
 edges_prio_3_weighting = 30
@@ -35,14 +35,15 @@ def generate_lines(numpydata, edges_prio_1, edges_prio_2, edges_prio_3):
                 adjacent_pixel = [xy[0] + direction[0], xy[1] + direction[1]]
                 
                 left_colour_match_weighting = weighted_left_colour_match(numpydata, circular_pattern, xy, adjacent_pixel, prev_dirct_index, applied_index)
-                right_colour_match_weighting = weighted_right_colour_match(numpydata, circular_pattern, xy, adjacent_pixel, prev_dirct_index, applied_index)  
+                right_colour_match_weighting = weighted_right_colour_match(numpydata, circular_pattern, xy, adjacent_pixel, prev_dirct_index, applied_index)
                 
-                if left_colour_match_weighting < 170 and right_colour_match_weighting < 170:
+                left_right_center_colour_match_boolean = left_right_center_colour_match(numpydata, circular_pattern, adjacent_pixel, applied_index)
+                if left_right_center_colour_match_boolean:
                     continue
                 
                 colour_match_weighting = weighted_colour_match(numpydata, xy, adjacent_pixel)
                 
-                if colour_match_weighting < 140:
+                if colour_match_weighting < 20:
                     continue
                 
                 weighted_perpendicular_colour_match_value = left_colour_match_weighting + right_colour_match_weighting
@@ -103,27 +104,47 @@ def generate_lines(numpydata, edges_prio_1, edges_prio_2, edges_prio_3):
                 prev_dirct_index = 0
                 start_point = xy
                             
-                # find best first point             
-                surrounding_pixel_xys = []
-                for direction in circular_pattern:
-                    adjacent_pixel = [xy[0] + direction[0], xy[1] + direction[1]]
-                    surrounding_pixel_xys.append([adjacent_pixel[0], adjacent_pixel[1]])
-                
-                # build list of suitable surrounding points and select best match       
+                # find best first point          
+                # build list of suitable surrounding points and select best match 
+                   
                 surrounding_pixels_weighted = []
-                for adjacent_pixel in surrounding_pixel_xys:
+                for index in range(len(circular_pattern)):
+                    direction = circular_pattern[index]
+                    adjacent_pixel = [xy[0] + direction[0], xy[1] + direction[1]]
+                
                     if adjacent_pixel in used:
                         surrounding_pixel_in_used = True
                         break
                     
+                    left_colour_match_weighting = weighted_left_colour_match(numpydata, circular_pattern, xy, adjacent_pixel, index, index)
+                    right_colour_match_weighting = weighted_right_colour_match(numpydata, circular_pattern, xy, adjacent_pixel, index, index)  
+                    
+                    left_right_center_colour_match_boolean = left_right_center_colour_match(numpydata, circular_pattern, adjacent_pixel, index)
+                    if left_right_center_colour_match_boolean:
+                        continue
+                    
+                    colour_match_weighting = weighted_colour_match(numpydata, xy, adjacent_pixel)
+                    
+                    if colour_match_weighting < 20:
+                        continue
+                    
+                    weighted_perpendicular_colour_match_value = left_colour_match_weighting + right_colour_match_weighting
+                    
+                    colour_match_weighting = weighted_colour_match(numpydata, xy, adjacent_pixel)
+                
+                    if colour_match_weighting < 20:
+                        continue
+                    
+                    directional_weighting = direction_weighting[0]
+                    
                     if adjacent_pixel in edges_prio_1:
-                        pixel_weight = edges_prio_1_weighting + weighted_colour_match(numpydata, xy, adjacent_pixel)
+                        pixel_weight = edges_prio_1_weighting + weighted_perpendicular_colour_match_value + colour_match_weighting + directional_weighting
                         surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
                     elif adjacent_pixel in edges_prio_2:
-                        pixel_weight = edges_prio_1_weighting + weighted_colour_match(numpydata, xy, adjacent_pixel)
+                        pixel_weight = edges_prio_1_weighting + weighted_perpendicular_colour_match_value + colour_match_weighting + directional_weighting
                         surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
                     elif adjacent_pixel in edges_prio_3:
-                        pixel_weight = edges_prio_1_weighting + weighted_colour_match(numpydata, xy, adjacent_pixel)
+                        pixel_weight = edges_prio_1_weighting + weighted_perpendicular_colour_match_value + colour_match_weighting + directional_weighting
                         surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
                 
                 if surrounding_pixel_in_used:

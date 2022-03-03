@@ -40,6 +40,63 @@ def weighted_left_colour_match(numpydata, circular_pattern, back_xy, forward_xy,
     weighting_l = int(max( 200 - delta_left_rgb / 2, 0))
     return weighting_l
 
+def left_right_center_colour_match(numpydata, circular_pattern, forward_xy, proposed_direction_index):
+    proposed_perpendicular_coordinate_adjustment_left_index = ( proposed_direction_index - 2 ) % 8
+    proposed_perpendicular_coordinate_adjustment_left = circular_pattern[proposed_perpendicular_coordinate_adjustment_left_index]
+    proposed_left_xy = [forward_xy[0] + proposed_perpendicular_coordinate_adjustment_left[0], forward_xy[1] + proposed_perpendicular_coordinate_adjustment_left[1]]
+    proposed_left_rgb = numpydata[proposed_left_xy[1]][proposed_left_xy[0]]
+    
+    proposed_perpendicular_coordinate_adjustment_right_index = ( proposed_direction_index + 2 ) % 8
+    proposed_perpendicular_coordinate_adjustment_right = circular_pattern[proposed_perpendicular_coordinate_adjustment_right_index]
+    proposed_right_xy = [forward_xy[0] + proposed_perpendicular_coordinate_adjustment_right[0], forward_xy[1] + proposed_perpendicular_coordinate_adjustment_right[1]]
+    proposed_right_rgb = numpydata[proposed_right_xy[1]][proposed_right_xy[0]]
+    
+    proposed_rgb = numpydata[forward_xy[1]][forward_xy[0]]
+    
+    delta_left_rgb = pixel_comparison(proposed_rgb, proposed_left_rgb)
+    delta_right_rgb = pixel_comparison(proposed_rgb, proposed_right_rgb)
+    
+    if delta_left_rgb < 30 and delta_right_rgb < 30:
+        return True
+
+    return False
+
+def weighted_colour_match_perpendicular(numpydata, circular_pattern, back_xy, forward_xy, previous_direction_index, proposed_direction_index):
+    
+    # previous left
+    previous_perpendicular_coordinate_adjustment_left_index = ( previous_direction_index - 2 ) % 8
+    previous_perpendicular_coordinate_adjustment_left = circular_pattern[previous_perpendicular_coordinate_adjustment_left_index]
+    previous_left_xy = [back_xy[0] + previous_perpendicular_coordinate_adjustment_left[0], back_xy[1] + previous_perpendicular_coordinate_adjustment_left[1]]
+    previous_left_rgb = numpydata[previous_left_xy[1]][previous_left_xy[0]]
+    
+    # proposed left
+    proposed_perpendicular_coordinate_adjustment_left_index = ( proposed_direction_index - 2 ) % 8
+    proposed_perpendicular_coordinate_adjustment_left = circular_pattern[proposed_perpendicular_coordinate_adjustment_left_index]
+    proposed_left_xy = [forward_xy[0] + proposed_perpendicular_coordinate_adjustment_left[0], forward_xy[1] + proposed_perpendicular_coordinate_adjustment_left[1]]
+    proposed_left_rgb = numpydata[proposed_left_xy[1]][proposed_left_xy[0]]
+    
+    #previous right
+    previous_perpendicular_coordinate_adjustment_right_index = ( previous_direction_index + 2 ) % 8
+    previous_perpendicular_coordinate_adjustment_right = circular_pattern[previous_perpendicular_coordinate_adjustment_right_index]
+    previous_right_xy = [back_xy[0] + previous_perpendicular_coordinate_adjustment_right[0], back_xy[1] + previous_perpendicular_coordinate_adjustment_right[1]]
+    previous_right_rgb = numpydata[previous_right_xy[1]][previous_right_xy[0]]
+    
+    # proposed right
+    proposed_perpendicular_coordinate_adjustment_right_index = ( proposed_direction_index + 2 ) % 8
+    proposed_perpendicular_coordinate_adjustment_right = circular_pattern[proposed_perpendicular_coordinate_adjustment_right_index]
+    proposed_right_xy = [forward_xy[0] + proposed_perpendicular_coordinate_adjustment_right[0], forward_xy[1] + proposed_perpendicular_coordinate_adjustment_right[1]]
+    proposed_right_rgb = numpydata[proposed_right_xy[1]][proposed_right_xy[0]]
+    
+    # compare previous left with proposed left and previous left with previous (central)
+    # compare previous right with proposed right and previous right with previous (central)
+    
+    
+    delta_right_rgb = pixel_comparison(previous_right_rgb, proposed_right_rgb)
+    delta_left_rgb = pixel_comparison(previous_left_rgb, proposed_left_rgb)
+    
+    weighting_l = int(max( 200 - delta_left_rgb / 2, 0))
+    return weighting_l
+
 def weighted_right_colour_match(numpydata, circular_pattern, back_xy, forward_xy, previous_direction_index, proposed_direction_index):
     previous_perpendicular_coordinate_adjustment_right_index = ( previous_direction_index + 2 ) % 8
     previous_perpendicular_coordinate_adjustment_right = circular_pattern[previous_perpendicular_coordinate_adjustment_right_index]

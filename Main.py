@@ -17,5 +17,3 @@ edges_prio_1, edges_prio_2, edges_prio_3 = edge_prioritisation(numpydata, edges_
 list_of_edge_prios = [edges_prio_1, edges_prio_2, edges_prio_3]
 
 generate_lines(numpydata, edges_prio_1, edges_prio_2, edges_prio_3)
-
-
