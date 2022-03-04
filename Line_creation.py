@@ -57,15 +57,17 @@ def generate_lines(numpydata, edges_prio_1, edges_prio_2, edges_prio_3):
                     continue
 
                 directional_weighting = direction_weighting[n]
+                
+                partial_pixel_weight = left_right_center_colour_match_weighting + directional_weighting + weighted_perpendicular_colour_match_value + colour_match_weighting
                     
                 if adjacent_pixel in edges_prio_1:
-                    pixel_weight = edges_prio_1_weighting + weighted_colour_match(numpydata, xy, adjacent_pixel) + directional_weighting + weighted_perpendicular_colour_match_value
+                    pixel_weight = edges_prio_1_weighting + partial_pixel_weight
                     surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
                 elif adjacent_pixel in edges_prio_2:
-                    pixel_weight = edges_prio_2_weighting + weighted_colour_match(numpydata, xy, adjacent_pixel) + directional_weighting + weighted_perpendicular_colour_match_value
+                    pixel_weight = edges_prio_2_weighting + partial_pixel_weight
                     surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
                 elif adjacent_pixel in edges_prio_3:
-                    pixel_weight = edges_prio_3_weighting + weighted_colour_match(numpydata, xy, adjacent_pixel) + directional_weighting + weighted_perpendicular_colour_match_value
+                    pixel_weight = edges_prio_3_weighting + partial_pixel_weight
                     surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])       
             
             if len(surrounding_pixels_weighted) == 0:
@@ -132,16 +134,16 @@ def generate_lines(numpydata, edges_prio_1, edges_prio_2, edges_prio_3):
                     
                     directional_weighting = direction_weighting[0]
                     
-                    
+                    partial_pixel_weight = left_right_center_colour_match_weighting + directional_weighting + weighted_perpendicular_colour_match_value + colour_match_weighting
                     
                     if adjacent_pixel in edges_prio_1:
-                        pixel_weight = edges_prio_1_weighting + weighted_perpendicular_colour_match_value + colour_match_weighting + directional_weighting
+                        pixel_weight = edges_prio_1_weighting + partial_pixel_weight
                         surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
                     elif adjacent_pixel in edges_prio_2:
-                        pixel_weight = edges_prio_2_weighting + weighted_perpendicular_colour_match_value + colour_match_weighting + directional_weighting
+                        pixel_weight = edges_prio_2_weighting + partial_pixel_weight
                         surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
                     elif adjacent_pixel in edges_prio_3:
-                        pixel_weight = edges_prio_3_weighting + weighted_perpendicular_colour_match_value + colour_match_weighting + directional_weighting
+                        pixel_weight = edges_prio_3_weighting + partial_pixel_weight
                         surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
                 
                 if surrounding_pixel_in_used:
