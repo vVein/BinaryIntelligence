@@ -181,14 +181,21 @@ def generate_lines(numpydata, edges_prio_1, edges_prio_2, edges_prio_3):
 
     print('checkmark14 polylines generated')
 
-    if 2 == 2:
-        # exclude 1 & 2 point lines
-        for line in lines:
-            if len(line[1]) > 6:
-                x, y = map(list, zip(*line[1]))
-                plt.plot(x, y, label = "line {}".format(line[0]) )
+    # filter short lines
+    final_lines = []
+    
+    for line in lines:
+        if len(line[1]) > 6:
+            final_lines.append(line)
+
+    if 20 == 2:
+        for line in final_lines:
+            x, y = map(list, zip(*line[1]))
+            plt.plot(x, y, label = "line {}".format(line[0]) )
         plt.gca().invert_yaxis()
         img = Image.fromarray(numpydata, 'RGB')
         img.save('my.png')
         plt.imshow(img)
         plt.show()
+        
+    return final_lines
