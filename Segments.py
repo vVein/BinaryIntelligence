@@ -7,14 +7,12 @@ plt.rcParams['axes.facecolor'] = 'white'
 plt.rcParams['figure.facecolor'] = 'white'
 
 # Lateral scan reduction (Left ro right)
-def segment_creation(numpydata, outlines, segment_length):
+def segment_creation(numpydata, outlines, ratification_length, segment_length):
     
     print('checkmark 15 segment creation initiated')
     width_tolerance = 1
     segments = []
     ratified_outlines = []
-    
-    ratification_length = 3
     
     for outline in outlines:
         ratified_outline = []
@@ -44,9 +42,11 @@ def segment_creation(numpydata, outlines, segment_length):
             streak += 1
             
             if index == (len(outline_xys) - 1):
-                print(ratified_outline)
+                new_x = cumulative_x / streak
+                new_y = cumulative_y / streak
+                ratified_outline.append([new_x,new_y])
                 ratified_outlines.append(ratified_outline)
-    print(ratified_outlines)
+
     if 2 == 2:
         for outline in ratified_outlines:
             x, y = map(list, zip(*outline))

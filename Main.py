@@ -19,4 +19,6 @@ list_of_edge_prios = [edges_prio_1, edges_prio_2, edges_prio_3]
 
 outlines = generate_lines(numpydata, edges_prio_1, edges_prio_2, edges_prio_3)
 
-segment_creation(numpydata, outlines, 8)
+segment_creation(numpydata, outlines, 4, 8)
+segment_creation(numpydata, outlines, 3, 8)
+segment_creation(numpydata, outlines, 2, 8)
