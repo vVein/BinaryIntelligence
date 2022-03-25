@@ -57,9 +57,9 @@ def segment_creation(numpydata, outlines, ratification_length, segment_length):
         plt.show()
     
     # vertex detection
-    back_xy
-    forward_bearing
-    bearing_deltas_collection = []
+    back_xy = []
+    forward_bearing = 0
+    line_segments = []
     for r_outline in ratified_outlines:
         first = True
         second = True
@@ -80,7 +80,43 @@ def segment_creation(numpydata, outlines, ratification_length, segment_length):
             bearing_deltas.append(bearing_delta)
             back_xy = xy
         
-        for bearing_delta in bearing_deltas:
+        active_streak = False
+        start_number = 0
+        end_number = 0
+        line_numbers = []
+        for number, bearing_delta in enumerate(bearing_deltas):
             if bearing_delta <= bearing_delta_threshold:
+                
+                if not active_streak:
+                    start_number = number
+                    active_streak = True
+                
                 continue
-            0
+            
+            # bearing_delta > bearing_delta_threshold:
+            if active_streak:                
+                end_number = number -1
+                if end_number - start_number > 1:
+                    line_numbers.append([start_number, end_number])
+            
+            # any active streak ends
+            active_streak = False
+            
+        for line_number_sf in line_numbers:
+            start_number = line_number_sf[0]
+            end_number = line_number_sf[1]
+            start_xy = r_outline[start_number]
+            end_xy = r_outline[end_number]
+            line_segments.append([start_xy, end_xy])
+            
+    print(line_segments)
+    if 2 == 2:
+        for line_segment in line_segments:
+            x, y = map(list, zip(*line_segment))
+            plt.plot(x, y, label = "line {}".format(outline[0]) )
+        plt.gca().invert_yaxis()
+        img = Image.fromarray(numpydata, 'RGB')
+        img.save('my.png')
+        plt.imshow(img)
+        plt.show()
+        

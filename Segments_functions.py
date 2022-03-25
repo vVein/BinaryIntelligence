@@ -7,12 +7,23 @@ def bearing(back_xy, forward_xy):
     delta_y = forward_xy[1] - back_xy[1]
     signX = 1
     signY = 1
-    mew
+    mew = 0
     if delta_x < 0:
         signX = -1
     if delta_y < 0:
         signY = -1
 
+    if delta_x == 0:
+        if signY == 1:
+            return mew
+        else:
+            return 180
+    if delta_y == 0:
+        if signX == 1:
+            return 90
+        else:
+            return 270
+    
     # Quadrant 1
     if signX == +1 and signY == -1:
         mew = abs(math.degrees(math.atan(delta_x / delta_y)))
