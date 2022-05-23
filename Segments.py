@@ -9,7 +9,7 @@ plt.rcParams['figure.facecolor'] = 'white'
 
 # Lateral scan reduction (Left ro right)
 def segment_creation(numpydata, outlines, ratification_length, segment_length):
-    bearing_delta_threshold = 8
+
     print('checkmark 15 segment creation initiated')
     ratified_outlines = []
     
@@ -46,7 +46,7 @@ def segment_creation(numpydata, outlines, ratification_length, segment_length):
                 ratified_outline.append([new_x,new_y])
                 ratified_outlines.append(ratified_outline)
 
-    if 20 == 2:
+    if 2 == 2:
         for outline in ratified_outlines:
             x, y = map(list, zip(*outline))
             plt.plot(x, y, label = "line {}".format(outline[0]) )
@@ -57,13 +57,24 @@ def segment_creation(numpydata, outlines, ratification_length, segment_length):
         plt.show()
     
     # vertex detection
-    back_xy = []
+    
     forward_bearing = 0
     line_segments = []
+    curve_segments = []
+    current_curve = []
+    start_bearing = 0
+    bearing_delta_straight_line_threshold = 6
+    bearing_delta_curve_threshold = 8
+    
     for r_outline in ratified_outlines:
         first = True
         second = True
-        bearing_deltas = []
+        start_xy = [] 
+        back_xy = []
+        active_curve = False
+        active_line = False
+        first_curve_bearing_delta = 0
+
         for xy in r_outline:
             if first:
                 back_xy = xy
@@ -76,40 +87,59 @@ def segment_creation(numpydata, outlines, ratification_length, segment_length):
                 continue
             previous_bearing = forward_bearing
             forward_bearing = bearing(back_xy, xy)
-            bearing_delta = bearing_delta_function(previous_bearing, forward_bearing)
-            bearing_deltas.append(bearing_delta)
+            absolute_bearing_delta, true_bearing_delta = bearing_delta_function(previous_bearing, forward_bearing)
+            
+            prev_xy = back_xy
             back_xy = xy
-        
-        active_streak = False
-        start_number = 0
-        end_number = 0
-        line_numbers = []
-        for number, bearing_delta in enumerate(bearing_deltas):
-            if bearing_delta <= bearing_delta_threshold:
+
+            if absolute_bearing_delta <= bearing_delta_straight_line_threshold:
                 
-                if not active_streak:
-                    start_number = number
-                    active_streak = True
+                # start a new line if one isnt active
+                if not active_line:
+                    start_xy = prev_xy
+                    start_bearing = previous_bearing
+                    active_line = True
+             
+                # Check if it is the last list entry
+                if xy == r_outline[-1]:
+                    line_segments.append([start_xy, prev_xy])
+                    active_line = False
+                    continue   
                 
-                continue
+                continue 
+                
+            elif active_curve:
+                variance = abs(true_bearing_delta - first_curve_bearing_delta)
+                sign = +1
+                if true_bearing_delta < 0:
+                    sign = -1
+                current_curve.append(xy)
+                if variance < bearing_delta_curve_threshold and sign == first_sign:
+                    continue
+                else:
+                    curve_segments.append(current_curve)
+                    current_curve = []
+                    active_curve = False
+                    continue
             
-            # bearing_delta > bearing_delta_threshold:
-            if active_streak:                
-                end_number = number -1
-                if end_number - start_number > 1:
-                    line_numbers.append([start_number, end_number])
+            if not active_curve:
+                    first_curve_bearing_delta = true_bearing_delta
+                    start_xy = prev_xy
+                    active_curve = True
+                    first_sign = +1
+                    if true_bearing_delta < 0:
+                        first_sign = -1            
+            else:
+                
+                if active_line:
+                
+                    line_segments.append([start_xy, prev_xy])
             
-            # any active streak ends
-            active_streak = False
+                    # any active streak ends
+                    active_line = False
+                    continue
             
-        for line_number_sf in line_numbers:
-            start_number = line_number_sf[0]
-            end_number = line_number_sf[1]
-            start_xy = r_outline[start_number]
-            end_xy = r_outline[end_number]
-            line_segments.append([start_xy, end_xy])
-            
-    print(line_segments)
+    # print(line_segments)
     if 2 == 2:
         for line_segment in line_segments:
             x, y = map(list, zip(*line_segment))

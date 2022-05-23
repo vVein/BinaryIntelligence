@@ -50,8 +50,12 @@ def bearing(back_xy, forward_xy):
 def bearing_delta_function(previous_bearing, forward_bearing):
     bearing_delta = forward_bearing - previous_bearing
     if abs(bearing_delta) > 180:
-        bearing_delta = 0
-        true_bearing_delta = abs(180 + bearing_delta)
+        absolute_bearing_delta = 360 - abs(bearing_delta)
+        if bearing_delta < 0:
+            true_bearing_delta = absolute_bearing_delta * -1
+        else:
+            true_bearing_delta = absolute_bearing_delta
     else:
-        true_bearing_delta = abs(bearing_delta)
-    return true_bearing_delta
+        absolute_bearing_delta = abs(bearing_delta)
+        true_bearing_delta = bearing_delta
+    return absolute_bearing_delta, true_bearing_delta
