@@ -74,30 +74,34 @@ def segment_creation(numpydata, outlines, ratification_length, segment_length):
         active_curve = False
         active_line = False
         first_curve_bearing_delta = 0
+        first_sign = 0
 
         for xy in r_outline:
+            
             if first:
                 back_xy = xy
                 first = False
                 continue
+            
             if second:
                 forward_bearing = bearing(back_xy, xy)
                 back_xy = xy
                 second = False
                 continue
+            
             previous_bearing = forward_bearing
             forward_bearing = bearing(back_xy, xy)
             absolute_bearing_delta, true_bearing_delta = bearing_delta_function(previous_bearing, forward_bearing)
             
             prev_xy = back_xy
             back_xy = xy
-
+            
+            # enter this if block for lines
             if absolute_bearing_delta <= bearing_delta_straight_line_threshold:
                 
-                # start a new line if one isnt active
+                # start a new line if one isn't active
                 if not active_line:
                     start_xy = prev_xy
-                    start_bearing = previous_bearing
                     active_line = True
              
                 # Check if it is the last list entry
@@ -107,14 +111,15 @@ def segment_creation(numpydata, outlines, ratification_length, segment_length):
                     continue   
                 
                 continue 
-                
+            
             elif active_curve:
                 variance = abs(true_bearing_delta - first_curve_bearing_delta)
                 sign = +1
                 if true_bearing_delta < 0:
                     sign = -1
-                current_curve.append(xy)
+                
                 if variance < bearing_delta_curve_threshold and sign == first_sign:
+                    current_curve.append(xy)
                     continue
                 else:
                     curve_segments.append(current_curve)
@@ -122,24 +127,26 @@ def segment_creation(numpydata, outlines, ratification_length, segment_length):
                     active_curve = False
                     continue
             
-            if not active_curve:
+            # start a curve 
+            elif not active_curve and not active_line:
                     first_curve_bearing_delta = true_bearing_delta
                     start_xy = prev_xy
+                    current_curve.append(start_xy)
                     active_curve = True
                     first_sign = +1
                     if true_bearing_delta < 0:
-                        first_sign = -1            
-            else:
-                
-                if active_line:
-                
-                    line_segments.append([start_xy, prev_xy])
+                        first_sign = -1
+                    
+                    continue          
             
-                    # any active streak ends
+            # enter this block to terminate an acitve line
+            else:
+                if active_line:
+                    line_segments.append([start_xy, prev_xy])
                     active_line = False
                     continue
             
-    # print(line_segments)
+    print(curve_segments)
     if 2 == 2:
         for line_segment in line_segments:
             x, y = map(list, zip(*line_segment))
