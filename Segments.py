@@ -61,8 +61,6 @@ def segment_creation(numpydata, outlines, ratification_length, segment_length):
     forward_bearing = 0
     line_segments = []
     curve_segments = []
-    current_curve = []
-    start_bearing = 0
     bearing_delta_straight_line_threshold = 6
     bearing_delta_curve_threshold = 8
     
@@ -71,6 +69,7 @@ def segment_creation(numpydata, outlines, ratification_length, segment_length):
         second = True
         start_xy = [] 
         back_xy = []
+        current_curve = []
         active_curve = False
         active_line = False
         first_curve_bearing_delta = 0
@@ -99,6 +98,12 @@ def segment_creation(numpydata, outlines, ratification_length, segment_length):
             # enter this if block for lines
             if absolute_bearing_delta <= bearing_delta_straight_line_threshold:
                 
+                # end active curve if it was previously started
+                if active_curve:
+                    curve_segments.append(current_curve)
+                    current_curve = []
+                    active_curve = False 
+                
                 # start a new line if one isn't active
                 if not active_line:
                     start_xy = prev_xy
@@ -113,6 +118,11 @@ def segment_creation(numpydata, outlines, ratification_length, segment_length):
                 continue 
             
             elif active_curve:
+                
+                if active_line:
+                    line_segments.append([start_xy, prev_xy])
+                    active_line = False
+                
                 variance = abs(true_bearing_delta - first_curve_bearing_delta)
                 sign = +1
                 if true_bearing_delta < 0:
@@ -120,6 +130,13 @@ def segment_creation(numpydata, outlines, ratification_length, segment_length):
                 
                 if variance < bearing_delta_curve_threshold and sign == first_sign:
                     current_curve.append(xy)
+                    
+                    # Check if it is the last list entry
+                    if xy == r_outline[-1]:
+                        curve_segments.append(current_curve)
+                        current_curve = []
+                        active_curve = False 
+                    
                     continue
                 else:
                     curve_segments.append(current_curve)
@@ -150,6 +167,16 @@ def segment_creation(numpydata, outlines, ratification_length, segment_length):
     if 2 == 2:
         for line_segment in line_segments:
             x, y = map(list, zip(*line_segment))
+            plt.plot(x, y, label = "line {}".format(outline[0]) )
+        plt.gca().invert_yaxis()
+        img = Image.fromarray(numpydata, 'RGB')
+        img.save('my.png')
+        plt.imshow(img)
+        plt.show()
+
+    if 2 == 2:
+        for curve_segment in curve_segments:
+            x, y = map(list, zip(*curve_segment))
             plt.plot(x, y, label = "line {}".format(outline[0]) )
         plt.gca().invert_yaxis()
         img = Image.fromarray(numpydata, 'RGB')
