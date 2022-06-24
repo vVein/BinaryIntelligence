@@ -6,7 +6,7 @@ from PIL import Image
 plt.rcParams['axes.facecolor'] = 'white'
 plt.rcParams['figure.facecolor'] = 'white'
 
-def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_trigger = 50):
+def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_trigger = 50, delta_trigger = 50):
     numpydata = image_as_numpyarray
     
     img_width = int(np.size(numpydata,1))
@@ -43,7 +43,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                 if not pending_edges_active:
                     pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
                 
-                rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                rgb_signs = RGB_sign_delta(previous_pixel, current_pixel, delta_trigger)
                    
                 pending_r_signs.append(rgb_signs[0])
                 pending_g_signs.append(rgb_signs[1])
@@ -61,7 +61,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                         pending_b_signs = []
                         pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
                         pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])
-                        rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                        rgb_signs = RGB_sign_delta(previous_pixel, current_pixel, delta_trigger)
                         pending_r_signs.append(rgb_signs[0])
                         pending_g_signs.append(rgb_signs[1])
                         pending_b_signs.append(rgb_signs[2])
@@ -110,7 +110,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                 if not pending_edges_active:
                     pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
                 
-                rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                rgb_signs = RGB_sign_delta(previous_pixel, current_pixel, delta_trigger)
                 
                 pending_r_signs.append(rgb_signs[0])
                 pending_g_signs.append(rgb_signs[1])
@@ -129,7 +129,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                         pending_b_signs = []
                         pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
                         pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])
-                        rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                        rgb_signs = RGB_sign_delta(previous_pixel, current_pixel, delta_trigger)
                         pending_r_signs.append(rgb_signs[0])
                         pending_g_signs.append(rgb_signs[1])
                         pending_b_signs.append(rgb_signs[2])
@@ -187,7 +187,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                 if not pending_edges_active:
                     pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
                 
-                rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                rgb_signs = RGB_sign_delta(previous_pixel, current_pixel, delta_trigger)
                    
                 pending_r_signs.append(rgb_signs[0])
                 pending_g_signs.append(rgb_signs[1])
@@ -205,7 +205,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                         pending_b_signs = []
                         pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
                         pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])
-                        rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                        rgb_signs = RGB_sign_delta(previous_pixel, current_pixel, delta_trigger)
                         pending_r_signs.append(rgb_signs[0])
                         pending_g_signs.append(rgb_signs[1])
                         pending_b_signs.append(rgb_signs[2])
@@ -261,7 +261,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                 if not pending_edges_active:
                     pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
                 
-                rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                rgb_signs = RGB_sign_delta(previous_pixel, current_pixel, delta_trigger)
                    
                 pending_r_signs.append(rgb_signs[0])
                 pending_g_signs.append(rgb_signs[1])
@@ -280,7 +280,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                         pending_b_signs = []
                         pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
                         pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])
-                        rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                        rgb_signs = RGB_sign_delta(previous_pixel, current_pixel, delta_trigger)
                         pending_r_signs.append(rgb_signs[0])
                         pending_g_signs.append(rgb_signs[1])
                         pending_b_signs.append(rgb_signs[2])
@@ -336,7 +336,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                 if not pending_edges_active:
                     pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
                 
-                rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                rgb_signs = RGB_sign_delta(previous_pixel, current_pixel, delta_trigger)
                    
                 pending_r_signs.append(rgb_signs[0])
                 pending_g_signs.append(rgb_signs[1])
@@ -355,7 +355,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                         pending_b_signs = []
                         pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
                         pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])
-                        rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                        rgb_signs = RGB_sign_delta(previous_pixel, current_pixel, delta_trigger)
                         pending_r_signs.append(rgb_signs[0])
                         pending_g_signs.append(rgb_signs[1])
                         pending_b_signs.append(rgb_signs[2])
@@ -411,7 +411,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                 if not pending_edges_active:
                     pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
                 
-                rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                rgb_signs = RGB_sign_delta(previous_pixel, current_pixel, delta_trigger)
                    
                 pending_r_signs.append(rgb_signs[0])
                 pending_g_signs.append(rgb_signs[1])
@@ -430,7 +430,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                         pending_b_signs = []
                         pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
                         pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])
-                        rgb_signs = RGB_sign_delta(previous_pixel, current_pixel)
+                        rgb_signs = RGB_sign_delta(previous_pixel, current_pixel, delta_trigger)
                         pending_r_signs.append(rgb_signs[0])
                         pending_g_signs.append(rgb_signs[1])
                         pending_b_signs.append(rgb_signs[2])
@@ -494,7 +494,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
         plt.imshow(img)
         plt.show()
         
-        x_cords_4, y_cords_4 = zip(*edges_diag_RL)
+        x_cords_4, y_cords_4 = zip(*edges_diag_LR)
         plt.scatter(*zip(*edges_diag_LR),marker='.', s=0.1, color='grey')
         plt.scatter(x_cords_4, y_cords_4, marker='.', s=0.5, color='grey')
         plt.gca().invert_yaxis()

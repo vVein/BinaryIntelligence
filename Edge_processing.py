@@ -5,7 +5,6 @@ from Colour_functions import *
 plt.rcParams['axes.facecolor'] = 'white'
 plt.rcParams['figure.facecolor'] = 'white'
 
-# void_buffer_adjustments = [-1.5, -1, -0.5, 0.5, 1, 1.5]
 void_buffer_adjustments = [-1.5, -1, -0.5, 0.5, 1, 1.5]
 
 # Lateral scan reduction (Left ro right)
@@ -490,7 +489,7 @@ def edge_prioritisation(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_d
 
     print('checkmark10')
     
-    if 20 == 2:
+    if 2 == 2:
         edges_prio_1.sort()
         edges_prio_2.sort()
         edges_prio_3.sort()

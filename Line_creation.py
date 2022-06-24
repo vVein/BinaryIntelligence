@@ -17,7 +17,7 @@ shape_no = 0
 current_shape = []
 
 # Polyline functions:
-def generate_lines(numpydata, edges_prio_1, edges_prio_2, edges_prio_3):
+def generate_outlines(numpydata, edges_prio_1, edges_prio_2, edges_prio_3):
 
     def generate_polyline(start_point, prev_dirct_index, last_stored_xy):
         global current_shape
@@ -175,11 +175,11 @@ def generate_lines(numpydata, edges_prio_1, edges_prio_2, edges_prio_3):
                 
                 lines.append([shape_no, current_shape])
                 
-    print('checkmark12 polyline')
+    print('checkmark12 outlines')
 
     start_new_polylines()
 
-    print('checkmark14 polylines generated')
+    print('checkmark14 outlines generated')
 
     # filter short lines
     final_lines = []
