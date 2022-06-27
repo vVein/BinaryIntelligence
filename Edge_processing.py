@@ -489,7 +489,7 @@ def edge_prioritisation(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_d
 
     print('checkmark10')
     
-    if 2 == 2:
+    if 20 == 2:
         edges_prio_1.sort()
         edges_prio_2.sort()
         edges_prio_3.sort()

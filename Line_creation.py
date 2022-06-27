@@ -17,7 +17,10 @@ shape_no = 0
 current_shape = []
 
 # Polyline functions:
-def generate_outlines(numpydata, edges_prio_1, edges_prio_2, edges_prio_3):
+def generate_outlines(numpydata, edges_prio_1, edges_prio_2, edges_prio_3, direction_weighting = [50, 40, 40, 30, 30, 20, 20], 
+                      edges_prio_1_weighting = 125, edges_prio_2_weighting = 60, edges_prio_3_weighting = 30, weighting_threshold = 300, 
+                      weighting_base = 200, weighting_division_coefficient = 2, rgb_delta_limit = 30, centre_weighting_division_coefficient = 3,
+                      weighting_base_cm = 200, colour_match_limit = 20):
 
     def generate_polyline(start_point, prev_dirct_index, last_stored_xy):
         global current_shape
@@ -34,16 +37,19 @@ def generate_outlines(numpydata, edges_prio_1, edges_prio_2, edges_prio_3):
                 direction = circular_pattern[applied_index]
                 adjacent_pixel = [xy[0] + direction[0], xy[1] + direction[1]]
                 
-                left_colour_match_weighting = weighted_left_colour_match(numpydata, circular_pattern, xy, adjacent_pixel, prev_dirct_index, applied_index)
-                right_colour_match_weighting = weighted_right_colour_match(numpydata, circular_pattern, xy, adjacent_pixel, prev_dirct_index, applied_index)
+                left_colour_match_weighting = weighted_left_colour_match(numpydata, circular_pattern, xy, adjacent_pixel, prev_dirct_index, 
+                                                                         applied_index, weighting_base, weighting_division_coefficient)
+                right_colour_match_weighting = weighted_right_colour_match(numpydata, circular_pattern, xy, adjacent_pixel, prev_dirct_index,
+                                                                           applied_index, weighting_base, weighting_division_coefficient)
                 
-                left_right_center_colour_match_weighting = left_right_center_colour_match(numpydata, circular_pattern, adjacent_pixel, applied_index)
+                left_right_center_colour_match_weighting = left_right_center_colour_match(numpydata, circular_pattern, adjacent_pixel, 
+                                                                                        applied_index, rgb_delta_limit, centre_weighting_division_coefficient)
                 if left_right_center_colour_match_weighting < 0:
                     continue
                 
-                colour_match_weighting = weighted_colour_match(numpydata, xy, adjacent_pixel)
+                colour_match_weighting = weighted_colour_match(numpydata, xy, adjacent_pixel, weighting_base_cm)
                 
-                if colour_match_weighting < 20:
+                if colour_match_weighting < colour_match_limit:
                     continue
                 
                 weighted_perpendicular_colour_match_value = left_colour_match_weighting + right_colour_match_weighting
