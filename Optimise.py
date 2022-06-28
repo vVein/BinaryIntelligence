@@ -18,7 +18,8 @@ numpydata = asarray(img)
 
 trial_limit = 20
 
-target_outlines = []
+target_outlines_xys = []
+target_blank_xys = []
 
 for trial in range(trial_limit):
     
@@ -31,10 +32,19 @@ for trial in range(trial_limit):
     edges_prio_2_weighting = 60
     edges_prio_3_weighting = 30
     weighting_threshold = 300
+    weighting_base = 200
+    weighting_division_coefficient = 2
+    rgb_delta_limit = 30
+    centre_weighting_division_coefficient = 3
+    weighting_base_cm = 200
+    colour_match_limit = 20
+    start_point_return_weighting = 5
 
     edges_lat, edges_vert, edges_diag_LR, edges_diag_RL = image_edge_detection(numpydata, RGB_tolerance, singular_RGB_trigger, delta_trigger)
 
     edges_prio_1, edges_prio_2, edges_prio_3 = edge_prioritisation(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_diag_RL)
 
     outlines = generate_outlines(numpydata, edges_prio_1, edges_prio_2, edges_prio_3, direction_weighting, 
-                      edges_prio_1_weighting, edges_prio_2_weighting, edges_prio_3_weighting, weighting_threshold)
+                      edges_prio_1_weighting, edges_prio_2_weighting, edges_prio_3_weighting, weighting_threshold,
+                      weighting_base, weighting_division_coefficient, rgb_delta_limit, centre_weighting_division_coefficient,
+                      weighting_base_cm, colour_match_limit, start_point_return_weighting)

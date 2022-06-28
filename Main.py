@@ -15,8 +15,6 @@ edges_lat, edges_vert, edges_diag_LR, edges_diag_RL = image_edge_detection(numpy
 
 edges_prio_1, edges_prio_2, edges_prio_3 = edge_prioritisation(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_diag_RL)
 
-# list_of_edge_prios = [edges_prio_1, edges_prio_2, edges_prio_3]
-
 outlines = generate_outlines(numpydata, edges_prio_1, edges_prio_2, edges_prio_3)
 
 segment_creation(numpydata, outlines, 2, 8)

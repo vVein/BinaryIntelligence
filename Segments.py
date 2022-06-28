@@ -113,7 +113,7 @@ def segment_creation(numpydata, outlines, ratification_length, segment_length):
                     active_line = False
                     continue
             
-    if 2 == 2:
+    if 20 == 2:
         for line_segment in line_segments:
             x, y = map(list, zip(*line_segment))
             plt.plot(x, y, label = "line {}".format(outline[0]) )
