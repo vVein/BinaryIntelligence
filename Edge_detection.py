@@ -6,7 +6,7 @@ from PIL import Image
 plt.rcParams['axes.facecolor'] = 'white'
 plt.rcParams['figure.facecolor'] = 'white'
 
-def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_trigger = 50, delta_trigger = 50):
+def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_trigger = 50, delta_trigger = 50, block_size = 6):
     numpydata = image_as_numpyarray
     
     img_width = int(np.size(numpydata,1))
@@ -37,43 +37,52 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
             previous_xy = current_xy
             current_xy = [x, y]
             current_pixel = list(numpydata[y][x])
+            
+            # test forward and back pixel to see if the colours are considered different enough based on the two thresholds
             different_colour = pixel_comparison_t(current_pixel, previous_pixel, singular_RGB_trigger, RGB_tolerance)
             
-            if different_colour:   
+            if different_colour:
+                
+                # include the previous edge since list is initiated after passing it
                 if not pending_edges_active:
                     pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
                 
-                rgb_signs = RGB_sign_delta(previous_pixel, current_pixel, delta_trigger)
+                # rgb_signs = RGB_sign_delta(previous_pixel, current_pixel, delta_trigger)
                    
-                pending_r_signs.append(rgb_signs[0])
-                pending_g_signs.append(rgb_signs[1])
-                pending_b_signs.append(rgb_signs[2])
-                list_of_sign_lists = [pending_r_signs, pending_g_signs, pending_b_signs]
-                # split if signs flip
-                for sign_sublist in list_of_sign_lists:
-                    if -1 in sign_sublist and +1 in sign_sublist:
-                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
-                        for xy in returned_edges:
-                            edges_lat.append(xy)
-                        pending_edges = []
-                        pending_r_signs = []
-                        pending_g_signs = []
-                        pending_b_signs = []
-                        pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
-                        pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])
-                        rgb_signs = RGB_sign_delta(previous_pixel, current_pixel, delta_trigger)
-                        pending_r_signs.append(rgb_signs[0])
-                        pending_g_signs.append(rgb_signs[1])
-                        pending_b_signs.append(rgb_signs[2])
-                        break
-                else:
-                    pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])        
+                # pending_r_signs.append(rgb_signs[0])
+                # pending_g_signs.append(rgb_signs[1])
+                # pending_b_signs.append(rgb_signs[2])
                 
-                pending_edges_active = True   
+                # list_of_sign_lists = [pending_r_signs, pending_g_signs, pending_b_signs]
+                
+                ## split if signs flip
+                #for sign_sublist in list_of_sign_lists:
+                #    if -1 in sign_sublist and +1 in sign_sublist:
+                #        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata, block_size)
+                #        for xy in returned_edges:
+                #            edges_lat.append(xy)
+                            
+                        # clean lists for reset
+                        #pending_edges = []
+                        #pending_r_signs = []
+                        #pending_g_signs = []
+                        #pending_b_signs = []
+                        #pending_edges.append([previous_xy[0], previous_xy[1], previous_pixel[0], previous_pixel[1], previous_pixel[2]])
+                        #pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])
+                        #rgb_signs = RGB_sign_delta(previous_pixel, current_pixel, delta_trigger)
+                        #pending_r_signs.append(rgb_signs[0])
+                        #pending_g_signs.append(rgb_signs[1])
+                        #pending_b_signs.append(rgb_signs[2])
+                        #break
+                #else:
+                #    pending_edges.append([x, y, current_pixel[0], current_pixel[1], current_pixel[2]])        
+                
+                pending_edges_active = True
+            # if colour thresholds arent exceeded; i.e. not a different colour
             else:
                 if pending_edges_active:
                     if len(pending_edges) > 1:
-                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
+                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata, block_size)
                         for xy in returned_edges:
                             edges_lat.append(xy)
                     elif len(pending_edges) == 1:
@@ -120,7 +129,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                 # split if signs flip
                 for sign_sublist in list_of_sign_lists:
                     if -1 in sign_sublist and +1 in sign_sublist:
-                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
+                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata, block_size)
                         for xy in returned_edges:
                             edges_vert.append(xy)
                         pending_edges = []
@@ -141,7 +150,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
             else:
                 if pending_edges_active:
                     if len(pending_edges) > 1:
-                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
+                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata, block_size)
                         for xy in returned_edges:
                             edges_vert.append(xy)
                     elif len(pending_edges) == 1:
@@ -196,7 +205,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                 # split if signs flip
                 for sign_sublist in list_of_sign_lists:
                     if -1 in sign_sublist and +1 in sign_sublist:
-                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
+                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata, block_size)
                         for xy in returned_edges:
                             edges_diag_LR.append(xy)
                         pending_edges = []
@@ -217,7 +226,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
             else:
                 if pending_edges_active:
                     if len(pending_edges) > 1:
-                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
+                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata, block_size)
                         for xy in returned_edges:
                             edges_diag_LR.append(xy)
                     elif len(pending_edges) == 1:
@@ -271,7 +280,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                 # split if signs flip
                 for sign_sublist in list_of_sign_lists:
                     if -1 in sign_sublist and +1 in sign_sublist:
-                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
+                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata, block_size)
                         for xy in returned_edges:
                             edges_diag_LR.append(xy)
                         pending_edges = []
@@ -292,7 +301,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
             else:
                 if pending_edges_active:
                     if len(pending_edges) > 1:
-                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
+                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata, block_size)
                         for xy in returned_edges:
                             edges_diag_LR.append(xy)
                     elif len(pending_edges) == 1:
@@ -346,7 +355,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                 # split if signs flip
                 for sign_sublist in list_of_sign_lists:
                     if -1 in sign_sublist and +1 in sign_sublist:
-                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
+                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata, block_size)
                         for xy in returned_edges:
                             edges_diag_RL.append(xy)
                         pending_edges = []
@@ -367,7 +376,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
             else:
                 if pending_edges_active:
                     if len(pending_edges) > 1:
-                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
+                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata, block_size)
                         for xy in returned_edges:
                             edges_diag_RL.append(xy)
                     elif len(pending_edges) == 1:
@@ -421,7 +430,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                 # split if signs flip
                 for sign_sublist in list_of_sign_lists:
                     if -1 in sign_sublist and +1 in sign_sublist:
-                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
+                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata, block_size)
                         for xy in returned_edges:
                             edges_diag_RL.append(xy)
                         pending_edges = []
@@ -442,7 +451,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
             else:
                 if pending_edges_active:
                     if len(pending_edges) > 1:
-                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata)
+                        returned_edges = edge_variance(pending_edges, singular_RGB_trigger, numpydata, block_size)
                         for xy in returned_edges:
                             edges_diag_RL.append(xy)
                     elif len(pending_edges) == 1:
