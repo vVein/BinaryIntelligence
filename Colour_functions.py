@@ -1,5 +1,8 @@
 
 
+from turtle import pen
+
+
 def pixel_comparison_t(current_pixel, previous_pixel, individual_threshold = 50, group_threshold = 110):
     comparison1 = abs(int(current_pixel[0]) - int(previous_pixel[0]))
     comparison2 = abs(int(current_pixel[1]) - int(previous_pixel[1]))
@@ -67,45 +70,6 @@ def left_right_center_colour_match(numpydata, circular_pattern, forward_xy, prop
     
     return weighting
 
-# redundant delete:
-def weighted_colour_match_perpendicular(numpydata, circular_pattern, back_xy, forward_xy, previous_direction_index, proposed_direction_index):
-    
-    # previous left
-    previous_perpendicular_coordinate_adjustment_left_index = ( previous_direction_index - 2 ) % 8
-    previous_perpendicular_coordinate_adjustment_left = circular_pattern[previous_perpendicular_coordinate_adjustment_left_index]
-    previous_left_xy = [back_xy[0] + previous_perpendicular_coordinate_adjustment_left[0], back_xy[1] + previous_perpendicular_coordinate_adjustment_left[1]]
-    previous_left_rgb = numpydata[previous_left_xy[1]][previous_left_xy[0]]
-    
-    # proposed left
-    proposed_perpendicular_coordinate_adjustment_left_index = ( proposed_direction_index - 2 ) % 8
-    proposed_perpendicular_coordinate_adjustment_left = circular_pattern[proposed_perpendicular_coordinate_adjustment_left_index]
-    proposed_left_xy = [forward_xy[0] + proposed_perpendicular_coordinate_adjustment_left[0], forward_xy[1] + proposed_perpendicular_coordinate_adjustment_left[1]]
-    proposed_left_rgb = numpydata[proposed_left_xy[1]][proposed_left_xy[0]]
-    
-    #previous right
-    previous_perpendicular_coordinate_adjustment_right_index = ( previous_direction_index + 2 ) % 8
-    previous_perpendicular_coordinate_adjustment_right = circular_pattern[previous_perpendicular_coordinate_adjustment_right_index]
-    previous_right_xy = [back_xy[0] + previous_perpendicular_coordinate_adjustment_right[0], back_xy[1] + previous_perpendicular_coordinate_adjustment_right[1]]
-    previous_right_rgb = numpydata[previous_right_xy[1]][previous_right_xy[0]]
-    
-    # proposed right
-    proposed_perpendicular_coordinate_adjustment_right_index = ( proposed_direction_index + 2 ) % 8
-    proposed_perpendicular_coordinate_adjustment_right = circular_pattern[proposed_perpendicular_coordinate_adjustment_right_index]
-    proposed_right_xy = [forward_xy[0] + proposed_perpendicular_coordinate_adjustment_right[0], forward_xy[1] + proposed_perpendicular_coordinate_adjustment_right[1]]
-    proposed_right_rgb = numpydata[proposed_right_xy[1]][proposed_right_xy[0]]
-    
-    previous_rgb = numpydata[back_xy[1]][back_xy[0]]
-    proposed_rgb = numpydata[forward_xy[1]][forward_xy[0]]
-    
-    # compare previous left with proposed left and previous left with previous (central)
-    # compare previous right with proposed right and previous right with previous (central)
-        
-    delta_right_rgb = pixel_comparison(proposed_rgb, proposed_right_rgb)
-    delta_left_rgb = pixel_comparison(proposed_rgb, proposed_left_rgb)
-    
-    weighting_l = int(max( 200 - delta_left_rgb / 2, 0))
-    return weighting_l
-
 def weighted_right_colour_match(numpydata, circular_pattern, back_xy, forward_xy, previous_direction_index, proposed_direction_index,
                                 weighting_base = 200, weighting_division_coefficient = 2):
     previous_perpendicular_coordinate_adjustment_right_index = ( previous_direction_index + 2 ) % 8
@@ -126,12 +90,14 @@ def colour_match(numpydata, xy, xy_n, tolerance):
     return not pixel_comparison(xy_pixel, xy_n_pixel, tolerance)
 
 def RGB_sign_delta(back_pixel, forward_pixel, delta_trigger = 50):
+    
     r_delta = int(back_pixel[0]) - int(forward_pixel[0])
     g_delta = int(back_pixel[1]) - int(forward_pixel[1])
     b_delta = int(back_pixel[2]) - int(forward_pixel[2])
     r_sign = 0
     g_sign = 0
     b_sign = 0
+    
     if abs(r_delta) > delta_trigger:
         if r_delta > 0:
             r_sign = 1
@@ -158,7 +124,7 @@ def RGB_sign_delta(back_pixel, forward_pixel, delta_trigger = 50):
     
     return [r_sign, g_sign, b_sign]
 
-def edge_variance(pending_edges, delta_trigger, numpydata):
+def edge_variance(pending_edges, delta_trigger):
     
     number_of_edges = len(pending_edges)
     returned_edges = []
@@ -172,18 +138,24 @@ def edge_variance(pending_edges, delta_trigger, numpydata):
     r_signs = []
     g_signs = []
     b_signs = []
-    nominated_edges_indices = []
+    flip_point_indices = []
+    end_index = 0
     
     for order, edge in enumerate(pending_edges):
+        
+        # check pending edges for sign flip(s)
+        # - build sign list
         if order == 0:
             current_pixel = edge           
         else:
             previous_pixel = current_pixel
             current_pixel = edge
+            
             r_delta = int(previous_pixel[2]) - int(current_pixel[2])
             g_delta = int(previous_pixel[3]) - int(current_pixel[3])
             b_delta = int(previous_pixel[4]) - int(current_pixel[4])
             
+            sign = 0
             if abs(r_delta) > delta_trigger:
                 if r_delta > 0:
                     sign = 1
@@ -191,8 +163,9 @@ def edge_variance(pending_edges, delta_trigger, numpydata):
                     sign = -1
                 else:
                     sign = 0
-                r_signs.append(sign)
-                
+            r_signs.append(sign)
+            
+            sign = 0
             if abs(g_delta) > delta_trigger:
                 if g_delta > 0:
                     sign = 1
@@ -200,8 +173,9 @@ def edge_variance(pending_edges, delta_trigger, numpydata):
                     sign = -1
                 else:
                     sign = 0
-                g_signs.append(sign)            
+            g_signs.append(sign)            
 
+            sign = 0
             if abs(b_delta) > delta_trigger:
                 if b_delta > 0:
                     sign = 1
@@ -209,9 +183,11 @@ def edge_variance(pending_edges, delta_trigger, numpydata):
                     sign = -1
                 else:
                     sign = 0
-                b_signs.append(sign)            
+            b_signs.append(sign)            
             
     list_of_signs = [r_signs, g_signs, b_signs]
+    
+    # check sign lists for a flip
     for x_signs in list_of_signs:
         for order, sign in enumerate(x_signs):
             if order == 0:
@@ -226,34 +202,36 @@ def edge_variance(pending_edges, delta_trigger, numpydata):
             elif previous_sign == current_sign:
                 continue
             elif previous_sign == -1:
-                if current_sign == 0 or current_sign == +1:
-                    nominated_edges_indices.append(order)
+                if current_sign == 0:
+                    end_index = order
+                if current_sign == +1:
+                    flip_point_indices.append(order)
             elif previous_sign == +1:
-                if current_sign == 0 or current_sign == -1:
-                    nominated_edges_indices.append(order)
+                if current_sign == 0:
+                    end_index = order
+                if current_sign == -1:
+                    flip_point_indices.append(order)
     
-    if len(nominated_edges_indices) == 0:
-        max_index = len(pending_edges) - 1
+    # add first boundary point:
+    midway = (edge[0] + edge[1]) / 2
+    returned_edges.append(midway)
+    
+    # add last boundary point
+    if end_index == 0:
+        midway = (edge[-1] + edge[-2]) / 2
+        returned_edges.append(midway)
+    else:
+        midway = (edge[end_index] + edge[end_index - 1]) / 2
+        returned_edges.append(midway)
+      
+    for flip_index in flip_point_indices:
         first_entry = pending_edges[0]
-        last_entry = pending_edges[max_index]
-        middle_x = int((first_entry[0] - last_entry[0]) / 2)
-        middle_y = int((first_entry[1] - last_entry[1]) / 2)
-        middle_xy = [middle_x ,middle_y ]
-        weakest_match = weakest_background_match(first_entry, last_entry, block_predominant_colour(numpydata, middle_xy, 6))
-        if weakest_match == first_entry:
-            nominated_edges_indices.append(0)
-        elif weakest_match == last_entry:
-            nominated_edges_indices.append(max_index)
+        last_entry = pending_edges[1]
+        middle_x = ((last_entry[0] + first_entry[0]) / 2)
+        middle_y = ((last_entry[1] + first_entry[1]) / 2)
+        middle_xy = [middle_x, middle_y]
+        returned_edges.append(middle_xy)
     
-    unique_nominated_edges_indices = set(nominated_edges_indices)
-    
-    #if pending_edges[0] == [305, 413, 2, 2, 2]:
-    #    print(pending_edges, unique_nominated_edges_indices)
-    
-    for order, edge in enumerate(pending_edges):
-        if order in unique_nominated_edges_indices:
-            xy = [edge[0], edge[1]]
-            returned_edges.append(xy)
     return returned_edges
                           
 def block_predominant_colour(numpydata, xy, block_size):
