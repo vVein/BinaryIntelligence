@@ -111,7 +111,6 @@ for trial in range(trial_limit):
     # define randomised parameters
     RGB_tolerance = 120
     singular_RGB_trigger = 50
-    delta_trigger = 50
     direction_weighting = [50, 40, 40, 30, 30, 20, 20]
     edges_prio_1_weighting = 125
     edges_prio_2_weighting = 60
@@ -125,8 +124,7 @@ for trial in range(trial_limit):
     colour_match_limit = 20
     start_point_return_weighting = 5
 
-    edges_lat, edges_vert, edges_diag_LR, edges_diag_RL = image_edge_detection(numpydata, RGB_tolerance, singular_RGB_trigger, 
-                                                                               delta_trigger)
+    edges_lat, edges_vert, edges_diag_LR, edges_diag_RL = image_edge_detection(numpydata, RGB_tolerance, singular_RGB_trigger)
 
     edges_prio_1, edges_prio_2, edges_prio_3 = edge_prioritisation(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_diag_RL)
 

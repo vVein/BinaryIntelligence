@@ -125,15 +125,8 @@ def RGB_sign_delta(back_pixel, forward_pixel, delta_trigger = 50):
     return [r_sign, g_sign, b_sign]
 
 def edge_variance(pending_edges, delta_trigger):
-    
-    number_of_edges = len(pending_edges)
+
     returned_edges = []
-    
-    if number_of_edges <= 1:
-        edge = pending_edges[0]
-        xy = [edge[0], edge[1]]
-        returned_edges.append(xy)
-        return returned_edges
     
     r_signs = []
     g_signs = []
@@ -186,7 +179,7 @@ def edge_variance(pending_edges, delta_trigger):
             b_signs.append(sign)            
             
     list_of_signs = [r_signs, g_signs, b_signs]
-    
+       
     # check sign lists for a flip
     for x_signs in list_of_signs:
         for order, sign in enumerate(x_signs):
@@ -213,26 +206,37 @@ def edge_variance(pending_edges, delta_trigger):
                     flip_point_indices.append(order)
     
     # add first boundary point:
-    midway = (edge[0] + edge[1]) / 2
+    midway = [(pending_edges[0][0] + pending_edges[1][0]) / 2, (pending_edges[0][1] + pending_edges[1][1]) / 2]
     returned_edges.append(midway)
     
     # add last boundary point
+    # if end index was previously determined the last gradient point is not at the end of the list; otherwise it is
     if end_index == 0:
-        midway = (edge[-1] + edge[-2]) / 2
+        midway = [(pending_edges[-1][0] + pending_edges[-2][0]) / 2, (pending_edges[-1][1] + pending_edges[-2][1]) / 2]
         returned_edges.append(midway)
     else:
-        midway = (edge[end_index] + edge[end_index - 1]) / 2
+        midway = [(pending_edges[-1][0] + pending_edges[-2][0]) / 2, (pending_edges[-1][1] + pending_edges[-2][1]) / 2]
         returned_edges.append(midway)
-      
-    for flip_index in flip_point_indices:
-        first_entry = pending_edges[0]
-        last_entry = pending_edges[1]
-        middle_x = ((last_entry[0] + first_entry[0]) / 2)
-        middle_y = ((last_entry[1] + first_entry[1]) / 2)
-        middle_xy = [middle_x, middle_y]
-        returned_edges.append(middle_xy)
     
-    return returned_edges
+    # add boundaries either side of flip points;
+    # in the event of a continuous streak which includes the RGB gradient flipping atleast once
+    if len(flip_point_indices) > 0:
+        for flip_index in flip_point_indices:
+            midway = [(pending_edges[flip_index][0] + pending_edges[flip_index - 1][0]) / 2,
+                       (pending_edges[flip_index][1] + pending_edges[flip_index - 1][1]) / 2]
+            returned_edges.append(midway)
+            midway = [(pending_edges[flip_index][0] + pending_edges[flip_index + 1][0]) / 2,
+                       (pending_edges[flip_index][1] + pending_edges[flip_index + 1][1]) / 2]
+            returned_edges.append(midway)
+    
+    # clean list to be added of duplicates, there is a possibility that the end could fall right after a flip and be added twice
+    # and really short pending lists could also have overlapping boundaries
+    returned_edges_clean = []
+    for boundary in returned_edges:
+        if boundary not in returned_edges_clean:
+            returned_edges_clean.append(boundary)
+            
+    return returned_edges_clean
                           
 def block_predominant_colour(numpydata, xy, block_size):
     colours = []
