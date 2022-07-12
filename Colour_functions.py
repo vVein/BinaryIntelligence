@@ -1,8 +1,5 @@
 
 
-from turtle import pen
-
-
 def pixel_comparison_t(current_pixel, previous_pixel, individual_threshold = 50, group_threshold = 110):
     comparison1 = abs(int(current_pixel[0]) - int(previous_pixel[0]))
     comparison2 = abs(int(current_pixel[1]) - int(previous_pixel[1]))
@@ -30,8 +27,15 @@ def weighted_colour_match(numpydata, xy_1, xy_2, weighting_base_cm = 200):
     weight = int(max( weighting_base_cm - comparison, 0))
     return weight
 
+# works with XYRGB inputs
+def weighted_colour_match_v(xyrgb_1, xyrgb_2, weighting_base = 200, weighting_division_coefficient = 2):
+    delta_rgb = pixel_comparison(xyrgb_1[2:4], xyrgb_2[2:4])
+    weight = int(max( weighting_base - delta_rgb / weighting_division_coefficient, 0))
+    return weight
+
 def weighted_left_colour_match(numpydata, circular_pattern, back_xy, forward_xy, previous_direction_index, proposed_direction_index, weighting_base = 200,
                                weighting_division_coefficient = 2):
+    # generate adjustment to find pixel to the left of the back pixel
     previous_perpendicular_coordinate_adjustment_left_index = ( previous_direction_index - 2 ) % 8
     previous_perpendicular_coordinate_adjustment_left = circular_pattern[previous_perpendicular_coordinate_adjustment_left_index]
     previous_left_xy = [back_xy[0] + previous_perpendicular_coordinate_adjustment_left[0], back_xy[1] + previous_perpendicular_coordinate_adjustment_left[1]]
@@ -206,16 +210,20 @@ def edge_variance(pending_edges, delta_trigger):
                     flip_point_indices.append(order)
     
     # add first boundary point:
-    midway = [(pending_edges[0][0] + pending_edges[1][0]) / 2, (pending_edges[0][1] + pending_edges[1][1]) / 2]
+    midway = [(pending_edges[0][0] + pending_edges[1][0]) / 2, (pending_edges[0][1] + pending_edges[1][1]) / 2, pending_edges[0][2],
+              pending_edges[0][3], pending_edges[0][4]]
     returned_edges.append(midway)
     
     # add last boundary point
     # if end index was previously determined the last gradient point is not at the end of the list; otherwise it is
     if end_index == 0:
-        midway = [(pending_edges[-1][0] + pending_edges[-2][0]) / 2, (pending_edges[-1][1] + pending_edges[-2][1]) / 2]
+        midway = [(pending_edges[-1][0] + pending_edges[-2][0]) / 2, (pending_edges[-1][1] + pending_edges[-2][1]) / 2, pending_edges[-1][2],
+              pending_edges[-1][3], pending_edges[-1][4]]
         returned_edges.append(midway)
     else:
-        midway = [(pending_edges[-1][0] + pending_edges[-2][0]) / 2, (pending_edges[-1][1] + pending_edges[-2][1]) / 2]
+        midway = [(pending_edges[end_index][0] + pending_edges[end_index - 1][0]) / 2, 
+                  (pending_edges[end_index][1] + pending_edges[end_index - 1][1]) / 2, pending_edges[end_index][2], pending_edges[end_index][3],
+                  pending_edges[end_index][4]]
         returned_edges.append(midway)
     
     # add boundaries either side of flip points;
@@ -223,10 +231,12 @@ def edge_variance(pending_edges, delta_trigger):
     if len(flip_point_indices) > 0:
         for flip_index in flip_point_indices:
             midway = [(pending_edges[flip_index][0] + pending_edges[flip_index - 1][0]) / 2,
-                       (pending_edges[flip_index][1] + pending_edges[flip_index - 1][1]) / 2]
+                       (pending_edges[flip_index][1] + pending_edges[flip_index - 1][1]) / 2, pending_edges[flip_index][2],
+                       pending_edges[flip_index][3], pending_edges[flip_index][4]]
             returned_edges.append(midway)
             midway = [(pending_edges[flip_index][0] + pending_edges[flip_index + 1][0]) / 2,
-                       (pending_edges[flip_index][1] + pending_edges[flip_index + 1][1]) / 2]
+                       (pending_edges[flip_index][1] + pending_edges[flip_index + 1][1]) / 2, pending_edges[flip_index][2],
+                       pending_edges[flip_index][3], pending_edges[flip_index][4]]
             returned_edges.append(midway)
     
     # clean list to be added of duplicates, there is a possibility that the end could fall right after a flip and be added twice
@@ -237,26 +247,4 @@ def edge_variance(pending_edges, delta_trigger):
             returned_edges_clean.append(boundary)
             
     return returned_edges_clean
-                          
-def block_predominant_colour(numpydata, xy, block_size):
-    colours = []
-    block_width = int(block_size / 2)
-    for adj_x in range(-block_width, block_width):
-        for adj_y in range(-block_width, block_width):
-            xy_add = [xy[0] + adj_x, xy[1] + adj_y]
-            xy_pixel = numpydata[xy_add[1]][xy_add[0]]
-            pixel_tupl = (xy_pixel[0], xy_pixel[1], xy_pixel[2])
-            colours.append(pixel_tupl)
-    most_common = max(set(colours), key = colours.count)
-    return list(most_common)
-
-def weakest_background_match(edge_1, edge_2, predominant_background_pixel):
-    pixel_1 = [edge_1[2], edge_1[3], edge_1[4]]
-    pixel_2 = [edge_2[2], edge_2[3], edge_2[4]]
-    pixel_1_background_delta = pixel_comparison(pixel_1, predominant_background_pixel)
-    pixel_2_background_delta = pixel_comparison(pixel_2, predominant_background_pixel)
-    if pixel_1_background_delta > pixel_2_background_delta:
-        return list(edge_1)
-    else:
-        return list(edge_2)
         

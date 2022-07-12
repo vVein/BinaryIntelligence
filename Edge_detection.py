@@ -269,7 +269,7 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
                     pending_edges = []
                     pending_edges_active = False
 
-    if 2 == 2:
+    if 20 == 2:
         
         x_cords_3, y_cords_3 = zip(*edges_lat)
         plt.scatter(*zip(*edges_lat),marker='.', s=0.1, color='green')
@@ -290,17 +290,29 @@ def image_edge_detection(image_as_numpyarray, RGB_tolerance = 120, singular_RGB_
         plt.legend()
         plt.imshow(img)
         plt.show()
+      
+    if 20 == 2:  
         
+        x_cords, y_cords = zip(*edges_diag_RL)
+        plt.scatter(*zip(*edges_diag_RL),marker='.', s=0.1, color='red')
+        plt.scatter(x_cords,y_cords,marker='.', s=0.5, color='red')
         x_cords_3, y_cords_3 = zip(*edges_lat)
         plt.scatter(*zip(*edges_lat),marker='.', s=0.1, color='green')
         plt.scatter(x_cords_3, y_cords_3, marker='.', s=0.5, color='green')
         x_cords_2, y_cords_2 = zip(*edges_vert)
         plt.scatter(*zip(*edges_vert),marker='.', s=0.1, color='blue')
         plt.scatter(x_cords_2,y_cords_2,marker='.', s=0.5, color='blue')
+        x_cords_4, y_cords_4 = zip(*edges_diag_LR)
+        plt.scatter(*zip(*edges_diag_LR),marker='.', s=0.1, color='grey')
+        plt.scatter(x_cords_4, y_cords_4, marker='.', s=0.5, color='grey')
         plt.gca().invert_yaxis()
         plt.legend()
+        img = Image.fromarray(numpydata, 'RGB')
+        img.save('my.png')
         plt.imshow(img)
         plt.show()
+        
+    if 20 == 2:
         
         x_cords, y_cords = zip(*edges_diag_RL)
         plt.scatter(*zip(*edges_diag_RL),marker='.', s=0.1, color='red')
