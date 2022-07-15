@@ -19,8 +19,8 @@ current_shape = []
 
 # Polyline functions:
 def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_diag_RL, direction_weighting = [50, 40, 40, 30, 30, 20, 20], 
-                      weighting_threshold = 100, weighting_base = 200, weighting_division_coefficient = 2, rgb_delta_limit = 30, 
-                      colour_match_limit = 20, start_point_return_weighting = 5):
+                      weighting_threshold = 100, weighting_base = 200, weighting_division_coefficient = 2,
+                      colour_match_minimum = 20, start_point_return_weighting = 5, minimum_polyline_loop_length = 12):
 
     print('generate outlines')
     
@@ -36,51 +36,43 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
             
             xy = last_stored_xy
             
-            # build list of suitable surrounding points and select best match  
+            # build list of suitable surrounding points and select best match 
+            # empty list 
             surrounding_pixels_weighted = []
-            for n, index_adj in enumerate(index_rotation):
-                applied_index = ( prev_dirct_index + index_adj ) % index_cap
-                direction = circular_pattern[applied_index]
-                adjacent_pixel = [xy[0] + direction[0], xy[1] + direction[1]]
-                
-                left_colour_match_weighting = weighted_left_colour_match(numpydata, circular_pattern, xy, adjacent_pixel, prev_dirct_index, 
-                                                                         applied_index, weighting_base, weighting_division_coefficient)
-                right_colour_match_weighting = weighted_right_colour_match(numpydata, circular_pattern, xy, adjacent_pixel, prev_dirct_index,
-                                                                           applied_index, weighting_base, weighting_division_coefficient)
-                
-                left_right_center_colour_match_weighting = left_right_center_colour_match(numpydata, circular_pattern, adjacent_pixel, 
-                                                                                        applied_index, rgb_delta_limit, centre_weighting_division_coefficient)
-                if left_right_center_colour_match_weighting < 0:
-                    continue
-                
-                colour_match_weighting = weighted_colour_match(numpydata, xy, adjacent_pixel, weighting_base_cm)
-                
-                if colour_match_weighting < colour_match_limit:
-                    continue
-                
-                weighted_perpendicular_colour_match_value = left_colour_match_weighting + right_colour_match_weighting
-                
-                if adjacent_pixel == start_point and len(current_shape) > 12:
-                    pixel_weight = edges_prio_1_weighting + colour_match_weighting + directional_weighting + start_point_return_weighting + weighted_perpendicular_colour_match_value
-                    surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
-                    continue
-                            
-                if adjacent_pixel in used:
-                    continue
-
-                directional_weighting = direction_weighting[n]
-                
-                partial_pixel_weight = left_right_center_colour_match_weighting + directional_weighting + weighted_perpendicular_colour_match_value + colour_match_weighting
+            # start with closest step spacing then work outwards
+            for multiplier in circular_pattern_multipliers:
+                for n, index_adj in enumerate(index_rotation):
+                    # determine new directional index, starts with direction of previous stored edge
+                    applied_index = ( prev_dirct_index + index_adj ) % index_cap
+                    direction = circular_pattern[applied_index]
+                    # next pixel to test xy
+                    test_pixel = [xy[0] + direction[0] * multiplier, xy[1] + direction[1] * multiplier]
                     
-                if adjacent_pixel in edges_prio_1:
-                    pixel_weight = edges_prio_1_weighting + partial_pixel_weight
+                    # match adjacent pixel to edge in lists if present
+                    
+                    for xyrgb in edges_combined:
+                        if xyrgb[0:1] == test_pixel:
+                            adjacent_pixel = xyrgb
+                    # 
+                    colour_match_weighting = weighted_colour_match_v(numpydata, xy, adjacent_pixel, weighting_base, weighting_division_coefficient)
+                    
+                    if colour_match_weighting < colour_match_minimum:
+                        continue
+                    
+                    if adjacent_pixel == start_point and len(current_shape) > minimum_polyline_loop_length:
+                        pixel_weight = edges_prio_1_weighting + colour_match_weighting + directional_weighting + start_point_return_weighting
+                        surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
+                        continue
+                                
+                    if adjacent_pixel in used:
+                        continue
+
+                    directional_weighting = direction_weighting[n]
+                    
+                    pixel_weight = directional_weighting + colour_match_weighting
+                        
                     surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
-                elif adjacent_pixel in edges_prio_2:
-                    pixel_weight = edges_prio_2_weighting + partial_pixel_weight
-                    surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
-                elif adjacent_pixel in edges_prio_3:
-                    pixel_weight = edges_prio_3_weighting + partial_pixel_weight
-                    surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])       
+   
             
             if len(surrounding_pixels_weighted) == 0:
                 suitable_matches = False
@@ -140,7 +132,7 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
                                                 
                         colour_match_weighting = weighted_colour_match_v(numpydata, xy, adjacent_pixel, weighting_base, weighting_division_coefficient)
                     
-                        if colour_match_weighting < colour_match_limit:
+                        if colour_match_weighting < colour_match_minimum:
                             continue
                                                 
                         surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], colour_match_weighting])
