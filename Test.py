@@ -1,52 +1,9 @@
-from PIL import Image
-from numpy import asarray
-import matplotlib.pyplot as plt
-import numpy as np
-import itertools
-from Colour_functions import *
 
-# load the image and convert into
-# numpy array
-img = Image.open(r'C:\Users\Stude\OneDrive\Pictures\Image-Analysis\Shapes.jpg')
-  
-# asarray() class is used to convert
-# PIL images into NumPy arrays
-numpydata = asarray(img)
-  
-# <class 'numpy.ndarray'>
-#print(type(numpydata))
-  
-#  shape
-print(numpydata.shape)
 
-print(img.mode)
+surrounding_pixels_weighted = [[33, 545, 67, 67, 67, 55], [31, 422, 26, 67, 67, 82], [33, 365, 67, 67, 67, 22]]
 
-print(numpydata[331][547][2])
+surrounding_pixels_weighted.sort(key = lambda surrounding_pixels_weighted : surrounding_pixels_weighted[5], reverse = True)
 
-img = Image.fromarray(numpydata, 'RGB')
-img.save('my.png')
+xyrgb_n = surrounding_pixels_weighted[0][0:5]
 
-plt.imshow(img)
-plt.show()
-
-list1 = [[15,3],[18,6],[7,82],[18,6]]
-list1.sort()
-stripped = list(list1 for list1,_ in itertools.groupby(list1))
-
-circular_pattern = [[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1]]
-
-print(list1)
-print(stripped)
-print(circular_pattern[3])
-
-tree = [[0, '(2,4)'], [1, '(1,2)'], [1, '(7,2)']]
-print(tree[0][1], tree[1][1], tree[2][1] )
-print(tree[0][1][1],tree[1][1][1])
-
-sub_tree = [2]
-sub_tree.append([4,2])
-sub_tree.append([7,6])
-print(sub_tree)
-
-pix = block_predominant_colour(numpydata, [222,364], 16)
-print(pix[0])
+print(xyrgb_n)

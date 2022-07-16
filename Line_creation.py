@@ -26,15 +26,16 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
     
     edges_combined = edges_lat + edges_vert + edges_diag_LR + edges_diag_RL
 
-    def generate_polyline(start_point, prev_dirct_index, last_stored_xy):
+    def generate_polyline(start_point, prev_dirct_index, last_stored_xyrgb):
         
         global current_shape
         completed_loop = False
         suitable_matches = True
         
         while suitable_matches and not completed_loop:
-            
-            xy = last_stored_xy
+
+            xyrgb = last_stored_xyrgb
+            xy = xyrgb[0:2]
             
             # build list of suitable surrounding points and select best match 
             # empty list 
@@ -46,43 +47,52 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
                     applied_index = ( prev_dirct_index + index_adj ) % index_cap
                     direction = circular_pattern[applied_index]
                     # next pixel to test xy
-                    test_pixel = [xy[0] + direction[0] * multiplier, xy[1] + direction[1] * multiplier]
+                    test_xy = [xy[0] + direction[0] * multiplier, xy[1] + direction[1] * multiplier]
                     
                     # match adjacent pixel to edge in lists if present
+                    test_xyrgb = [0]
+                                      
+                    for xyrgb_l in edges_combined:
+                        if xyrgb_l[0:2] == test_xy:
+                            test_xyrgb = xyrgb_l
                     
-                    for xyrgb in edges_combined:
-                        if xyrgb[0:1] == test_pixel:
-                            adjacent_pixel = xyrgb
-                    # 
-                    colour_match_weighting = weighted_colour_match_v(numpydata, xy, adjacent_pixel, weighting_base, weighting_division_coefficient)
+                    # test pixel is not present in the list of edges; proceed to next test
+                    if test_xyrgb == [0]:
+                        continue
+                                           
+                    colour_match_weighting = weighted_colour_match_v(xyrgb, test_xyrgb, weighting_base, weighting_division_coefficient)
                     
                     if colour_match_weighting < colour_match_minimum:
                         continue
                     
-                    if adjacent_pixel == start_point and len(current_shape) > minimum_polyline_loop_length:
-                        pixel_weight = edges_prio_1_weighting + colour_match_weighting + directional_weighting + start_point_return_weighting
-                        surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
-                        continue
-                                
-                    if adjacent_pixel in used:
-                        continue
-
                     directional_weighting = direction_weighting[n]
                     
-                    pixel_weight = directional_weighting + colour_match_weighting
-                        
-                    surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], pixel_weight])
-   
+                    # close the loop prio
+                    if test_xy == start_point and len(current_shape) > minimum_polyline_loop_length:
+                        pixel_weight = [colour_match_weighting + directional_weighting + start_point_return_weighting]
+                        surrounding_pixels_weighted.append(test_xyrgb + pixel_weight)
+                        continue
+                    
+                    # dont reuse edges
+                    if test_xy in used:
+                        continue
+                    
+                    pixel_weight = [directional_weighting + colour_match_weighting]
+                    
+                    # build list of candidate pixels
+                    surrounding_pixels_weighted.append(test_xyrgb + pixel_weight)
             
             if len(surrounding_pixels_weighted) == 0:
                 suitable_matches = False
                 break
             
-            surrounding_pixels_weighted.sort(key = lambda surrounding_pixels_weighted : surrounding_pixels_weighted[2], reverse = True)
-            xy_n = [surrounding_pixels_weighted[0][0], surrounding_pixels_weighted[0][1]]
-            xy_n_weight = surrounding_pixels_weighted[0][2]
-                
-            if xy_n == start_point and len(current_shape) > 12:
+            surrounding_pixels_weighted.sort(key = lambda surrounding_pixels_weighted : surrounding_pixels_weighted[5], reverse = True)
+            xyrgb_n = surrounding_pixels_weighted[0][0:5]
+            xy_n = xyrgb_n[0:2]
+            xy_n_weight = surrounding_pixels_weighted[0][5]
+            
+            # close the shape
+            if xy_n == start_point and len(current_shape) > minimum_polyline_loop_length:
                 current_shape.append(xy_n)
                 completed_loop = True
                 break
@@ -90,21 +100,37 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
             if xy_n_weight >= weighting_threshold:
                 used.append(xy_n)
                 current_shape.append(xy_n)
-                last_stored_xy = xy_n
-                delta = [xy_n[0]-xy[0],xy_n[1]-xy[1]]
+                last_stored_xyrgb = xyrgb_n
+                delta = [xy_n[0]-xy[0], xy_n[1]-xy[1]]
+                
+                # account for half steps
+                if not int(delta[0]) == delta[0] or not int(delta[1]) == delta[1] :
+                    old_delta = delta
+                    delta = [int(old_delta[0] * 2), int(old_delta[1] * 2)]
+                
                 dirct_index = [indx for indx, dirct in enumerate(circular_pattern) if dirct == delta]
                 prev_dirct_index = dirct_index[0]
 
+            # stop considering candidates within the shortlist that fall below the threshold
             if xy_n_weight < weighting_threshold:
                 suitable_matches = False
+
+    total = len(edges_combined)
+    milestone_step = 0.05
 
     # this is the beginning of the routine, unfortunate positioning
     def start_new_polylines():
         global shape_no, current_shape
-        for xy in edges_combined:
+        next_milestone = 0.05
+        for position, xyrgb in enumerate(edges_combined):
+            
+            if position / total > next_milestone:
+                print(next_milestone * 100,"%")
+                next_milestone = next_milestone + milestone_step
             
             new_shape = False
             surrounding_pixel_in_used = False
+            xy = xyrgb[0:2]
             
             if xy not in used:
 
@@ -113,7 +139,6 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
                             
                 # find best first point          
                 # build list of suitable surrounding points and select best match 
-                
                 surrounding_pixels_weighted = []
                 
                 # start with closest step spacing then work outwards
@@ -123,19 +148,31 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
                         
                         direction = circular_pattern[index]
 
-                        adjacent_pixel = [xy[0] + direction[0] * multiplier, xy[1] + direction[1] * multiplier]
+                        test_xy = [xy[0] + direction[0] * multiplier, xy[1] + direction[1] * multiplier]
                     
                         # prevent use of pixels adjacent to used ones
-                        if adjacent_pixel in used:
+                        if test_xy in used:
                             surrounding_pixel_in_used = True
                             break
-                                                
-                        colour_match_weighting = weighted_colour_match_v(numpydata, xy, adjacent_pixel, weighting_base, weighting_division_coefficient)
+                        
+                        # match adjacent pixel to edge in lists if present
+                        test_xyrgb = [0]
                     
+                        for xyrgb_l in edges_combined:                       
+                            if xyrgb_l[0:2] == test_xy:
+                                test_xyrgb = xyrgb_l
+                    
+                        # test pixel is not present in the list of edges; proceed to next test
+                        if test_xyrgb == [0]:
+                            continue
+                                                    
+                        colour_match_weighting = weighted_colour_match_v(xyrgb, test_xyrgb, weighting_base, weighting_division_coefficient)
+                        pixel_weight = [colour_match_weighting]
+                        
                         if colour_match_weighting < colour_match_minimum:
                             continue
-                                                
-                        surrounding_pixels_weighted.append([adjacent_pixel[0], adjacent_pixel[1], colour_match_weighting])
+
+                        surrounding_pixels_weighted.append(test_xyrgb + pixel_weight)
                 
                 # move on to a new pixel if nearby pixel already used
                 if surrounding_pixel_in_used:
@@ -144,9 +181,10 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
                 if len(surrounding_pixels_weighted) == 0:
                     continue
                         
-                surrounding_pixels_weighted.sort(key = lambda surrounding_pixels_weighted : surrounding_pixels_weighted[2], reverse = True)
-                xy_n = [surrounding_pixels_weighted[0][0], surrounding_pixels_weighted[0][1]]
-                xy_n_weight = surrounding_pixels_weighted[0][2]
+                surrounding_pixels_weighted.sort(key = lambda surrounding_pixels_weighted : surrounding_pixels_weighted[5], reverse = True)
+                xyrgb_n = surrounding_pixels_weighted[0][0:5]
+                xy_n = xyrgb_n[0:2]
+                xy_n_weight = surrounding_pixels_weighted[0][5]
                 
                 if xy_n_weight >= weighting_threshold:
                     current_shape = []
@@ -159,17 +197,17 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
                     delta = [xy_n[0] - xy[0], xy_n[1] - xy[1]]
                     
                     # account for half steps
-                    if isinstance(delta[0], float):
+                    if not int(delta[0]) == delta[0] or not int(delta[1]) == delta[1] :
                         old_delta = delta
                         delta = [int(old_delta[0] * 2), int(old_delta[1] * 2)]
 
                     dirct_index = [indx for indx, dirct in enumerate(circular_pattern) if dirct == delta]
                     prev_dirct_index = dirct_index[0]
-                    last_stored_xy = xy_n
+                    last_stored_xyrgb = xyrgb_n
 
             # Add to new polyline            
             if new_shape:
-                generate_polyline(start_point, prev_dirct_index, last_stored_xy)
+                generate_polyline(start_point, prev_dirct_index, last_stored_xyrgb)
                 
                 lines.append([shape_no, current_shape])
 

@@ -29,7 +29,7 @@ def weighted_colour_match(numpydata, xy_1, xy_2, weighting_base_cm = 200):
 
 # works with XYRGB inputs
 def weighted_colour_match_v(xyrgb_1, xyrgb_2, weighting_base = 200, weighting_division_coefficient = 2):
-    delta_rgb = pixel_comparison(xyrgb_1[2:4], xyrgb_2[2:4])
+    delta_rgb = pixel_comparison(xyrgb_1[2:5], xyrgb_2[2:5])
     weight = int(max( weighting_base - delta_rgb / weighting_division_coefficient, 0))
     return weight
 
