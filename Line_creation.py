@@ -16,11 +16,13 @@ weighting_threshold = 300
 index_cap = len(index_rotation) + 1
 shape_no = 0
 current_shape = []
+previous_rgbs = []
 
 # Polyline functions:
 def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_diag_RL, direction_weighting = [50, 40, 40, 30, 30, 20, 20], 
-                      weighting_threshold = 100, weighting_base = 200, weighting_division_coefficient = 2,
-                      colour_match_minimum = 20, start_point_return_weighting = 5, minimum_polyline_loop_length = 12):
+                      weighting_threshold = 80, weighting_base = 250, weighting_division_coefficient = 2,
+                      colour_match_minimum = 20, start_point_return_weighting = 5, minimum_polyline_loop_length = 12, 
+                      directional_multiplier_weighting = 35, trailing_rgb_length = 10):
 
     print('generate outlines')
     
@@ -59,17 +61,39 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
                     # test pixel is not present in the list of edges; proceed to next test
                     if test_xyrgb == [0]:
                         continue
+                    
+                    sum_totals = []
+                    avg_xyrgb = []
+                    
+                    if len(previous_rgbs) < trailing_rgb_length:
+                        # average entire list and use as base xyrgb
+                        for r in range(3):
+                            for previous_rgb in previous_rgbs:
+                                sum_totals[r] = sum_totals[r] + previous_rgb[r]
+                        for r in range(3):
+                            avg_xyrgb[r] = sum_totals[r] / len(previous_rgbs)
+                    else:
+                        trailing_rgbs = previous_rgbs[-trailing_rgb_length: -1]
+                        for r in range(3):
+                            for previous_rgb in trailing_rgbs:
+                                sum_totals[r] = sum_totals[r] + previous_rgb[r]
+                        for r in range(3):
+                            avg_xyrgb[r] = sum_totals[r] / trailing_rgb_length
                                            
-                    colour_match_weighting = weighted_colour_match_v(xyrgb, test_xyrgb, weighting_base, weighting_division_coefficient)
+                    colour_match_weighting = weighted_colour_match_v(avg_xyrgb, test_xyrgb, weighting_base, weighting_division_coefficient)
                     
                     if colour_match_weighting < colour_match_minimum:
                         continue
                     
                     directional_weighting = direction_weighting[n]
                     
+                    directional_multiplier_weight = 0
+                    if multiplier == 0.5:
+                        directional_multiplier_weight = directional_multiplier_weighting
+                    
                     # close the loop prio
                     if test_xy == start_point and len(current_shape) > minimum_polyline_loop_length:
-                        pixel_weight = [colour_match_weighting + directional_weighting + start_point_return_weighting]
+                        pixel_weight = [colour_match_weighting + directional_weighting + start_point_return_weighting + directional_multiplier_weight]
                         surrounding_pixels_weighted.append(test_xyrgb + pixel_weight)
                         continue
                     
@@ -77,7 +101,7 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
                     if test_xy in used:
                         continue
                     
-                    pixel_weight = [directional_weighting + colour_match_weighting]
+                    pixel_weight = [directional_weighting + colour_match_weighting + directional_multiplier_weight]
                     
                     # build list of candidate pixels
                     surrounding_pixels_weighted.append(test_xyrgb + pixel_weight)
@@ -100,6 +124,7 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
             if xy_n_weight >= weighting_threshold:
                 used.append(xy_n)
                 current_shape.append(xy_n)
+                previous_rgbs.append(xyrgb_n[2:5])
                 last_stored_xyrgb = xyrgb_n
                 delta = [xy_n[0]-xy[0], xy_n[1]-xy[1]]
                 
@@ -125,7 +150,7 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
         for position, xyrgb in enumerate(edges_combined):
             
             if position / total > next_milestone:
-                print(next_milestone * 100,"%")
+                print(int(next_milestone * 100),"%")
                 next_milestone = next_milestone + milestone_step
             
             new_shape = False
@@ -167,7 +192,12 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
                             continue
                                                     
                         colour_match_weighting = weighted_colour_match_v(xyrgb, test_xyrgb, weighting_base, weighting_division_coefficient)
-                        pixel_weight = [colour_match_weighting]
+                        
+                        directional_multiplier_weight = 0
+                        if multiplier == 0.5:
+                            directional_multiplier_weight = directional_multiplier_weighting
+                        
+                        pixel_weight = [colour_match_weighting + directional_multiplier_weight]
                         
                         if colour_match_weighting < colour_match_minimum:
                             continue
@@ -188,11 +218,14 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
                 
                 if xy_n_weight >= weighting_threshold:
                     current_shape = []
+                    previous_rgbs = []
                     shape_no = shape_no + 1
                     current_shape.append([xy[0], xy[1]])
                     current_shape.append([xy_n[0], xy_n[1]])
                     used.append([xy[0], xy[1]])
                     used.append([xy_n[0], xy_n[1]])
+                    previous_rgbs.append(xyrgb[2:5])
+                    previous_rgbs.append(xyrgb_n[2:5])
                     new_shape = True
                     delta = [xy_n[0] - xy[0], xy_n[1] - xy[1]]
                     
@@ -219,7 +252,7 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
     final_lines = []
     
     for line in lines:
-        if len(line[1]) > 6:
+        if len(line[1]) > 3:
             final_lines.append(line)
 
     if 2 == 2:
