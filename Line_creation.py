@@ -28,12 +28,12 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
     
     edges_combined = edges_lat + edges_vert + edges_diag_LR + edges_diag_RL
 
-    def generate_polyline(start_point, prev_dirct_index, last_stored_xyrgb):
+    def generate_polyline(start_point, prev_dirct_index, last_stored_xyrgb, previous_rgbs):
         
         global current_shape
         completed_loop = False
         suitable_matches = True
-        
+
         while suitable_matches and not completed_loop:
 
             xyrgb = last_stored_xyrgb
@@ -53,7 +53,7 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
                     
                     # match adjacent pixel to edge in lists if present
                     test_xyrgb = [0]
-                                      
+                    
                     for xyrgb_l in edges_combined:
                         if xyrgb_l[0:2] == test_xy:
                             test_xyrgb = xyrgb_l
@@ -62,8 +62,8 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
                     if test_xyrgb == [0]:
                         continue
                     
-                    sum_totals = []
-                    avg_xyrgb = []
+                    sum_totals = [0, 0, 0]
+                    avg_rgb = [0, 0, 0]
                     
                     if len(previous_rgbs) < trailing_rgb_length:
                         # average entire list and use as base xyrgb
@@ -71,16 +71,19 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
                             for previous_rgb in previous_rgbs:
                                 sum_totals[r] = sum_totals[r] + previous_rgb[r]
                         for r in range(3):
-                            avg_xyrgb[r] = sum_totals[r] / len(previous_rgbs)
+                            avg_rgb[r] = int( sum_totals[r] / len(previous_rgbs) )
+                        
                     else:
+                        # average trailing list and use as base xyrgb
                         trailing_rgbs = previous_rgbs[-trailing_rgb_length: -1]
                         for r in range(3):
                             for previous_rgb in trailing_rgbs:
                                 sum_totals[r] = sum_totals[r] + previous_rgb[r]
                         for r in range(3):
-                            avg_xyrgb[r] = sum_totals[r] / trailing_rgb_length
-                                           
-                    colour_match_weighting = weighted_colour_match_v(avg_xyrgb, test_xyrgb, weighting_base, weighting_division_coefficient)
+                            avg_rgb[r] = int( sum_totals[r] / len(trailing_rgbs) )
+                    
+                    prxy_avgrgb = xy + avg_rgb
+                    colour_match_weighting = weighted_colour_match_v(prxy_avgrgb, test_xyrgb, weighting_base, weighting_division_coefficient)
                     
                     if colour_match_weighting < colour_match_minimum:
                         continue
@@ -135,7 +138,7 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
                 
                 dirct_index = [indx for indx, dirct in enumerate(circular_pattern) if dirct == delta]
                 prev_dirct_index = dirct_index[0]
-
+            
             # stop considering candidates within the shortlist that fall below the threshold
             if xy_n_weight < weighting_threshold:
                 suitable_matches = False
@@ -240,7 +243,7 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
 
             # Add to new polyline            
             if new_shape:
-                generate_polyline(start_point, prev_dirct_index, last_stored_xyrgb)
+                generate_polyline(start_point, prev_dirct_index, last_stored_xyrgb, previous_rgbs)
                 
                 lines.append([shape_no, current_shape])
 
