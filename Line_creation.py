@@ -27,6 +27,8 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
     print('generate outlines')
     
     edges_combined = edges_lat + edges_vert + edges_diag_LR + edges_diag_RL
+    
+    edges_combined.sort(key = lambda x: (x[0], x[1]))
 
     def generate_polyline(start_point, prev_dirct_index, last_stored_xyrgb, previous_rgbs):
         
@@ -38,6 +40,27 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
 
             xyrgb = last_stored_xyrgb
             xy = xyrgb[0:2]
+            
+            # produce average reference rgb from trailing list
+            sum_totals = [0, 0, 0]
+            avg_rgb = [0, 0, 0]
+            
+            if len(previous_rgbs) < trailing_rgb_length:
+                # average entire list and use as base xyrgb
+                for r in range(3):
+                    for previous_rgb in previous_rgbs:
+                        sum_totals[r] = sum_totals[r] + previous_rgb[r]
+                for r in range(3):
+                    avg_rgb[r] = int( sum_totals[r] / len(previous_rgbs) )
+                
+            else:
+                # average trailing list and use as base xyrgb
+                trailing_rgbs = previous_rgbs[-trailing_rgb_length: -1]
+                for r in range(3):
+                    for previous_rgb in trailing_rgbs:
+                        sum_totals[r] = sum_totals[r] + previous_rgb[r]
+                for r in range(3):
+                    avg_rgb[r] = int( sum_totals[r] / len(trailing_rgbs) )
             
             # build list of suitable surrounding points and select best match 
             # empty list 
@@ -51,9 +74,14 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
                     # next pixel to test xy
                     test_xy = [xy[0] + direction[0] * multiplier, xy[1] + direction[1] * multiplier]
                     
+                    # dont reuse edges
+                    if test_xy in used:
+                        continue
+                            
                     # match adjacent pixel to edge in lists if present
                     test_xyrgb = [0]
                     
+                    # find any matches in the list of colour boundaries provided
                     for xyrgb_l in edges_combined:
                         if xyrgb_l[0:2] == test_xy:
                             test_xyrgb = xyrgb_l
@@ -62,28 +90,11 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
                     if test_xyrgb == [0]:
                         continue
                     
-                    sum_totals = [0, 0, 0]
-                    avg_rgb = [0, 0, 0]
-                    
-                    if len(previous_rgbs) < trailing_rgb_length:
-                        # average entire list and use as base xyrgb
-                        for r in range(3):
-                            for previous_rgb in previous_rgbs:
-                                sum_totals[r] = sum_totals[r] + previous_rgb[r]
-                        for r in range(3):
-                            avg_rgb[r] = int( sum_totals[r] / len(previous_rgbs) )
-                        
-                    else:
-                        # average trailing list and use as base xyrgb
-                        trailing_rgbs = previous_rgbs[-trailing_rgb_length: -1]
-                        for r in range(3):
-                            for previous_rgb in trailing_rgbs:
-                                sum_totals[r] = sum_totals[r] + previous_rgb[r]
-                        for r in range(3):
-                            avg_rgb[r] = int( sum_totals[r] / len(trailing_rgbs) )
-                    
                     prxy_avgrgb = xy + avg_rgb
                     colour_match_weighting = weighted_colour_match_v(prxy_avgrgb, test_xyrgb, weighting_base, weighting_division_coefficient)
+                    
+                    if xy == [198.5, 103.5] or xy == [198.5, 171]:
+                        print(xy, test_xyrgb, colour_match_weighting, prxy_avgrgb)
                     
                     if colour_match_weighting < colour_match_minimum:
                         continue
@@ -100,14 +111,16 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
                         surrounding_pixels_weighted.append(test_xyrgb + pixel_weight)
                         continue
                     
-                    # dont reuse edges
-                    if test_xy in used:
-                        continue
-                    
                     pixel_weight = [directional_weighting + colour_match_weighting + directional_multiplier_weight]
+                    
+                    if xy == [198.5, 103.5] or xy == [198.5, 171]:
+                        print(xy, test_xyrgb, colour_match_weighting, prxy_avgrgb, pixel_weight)
                     
                     # build list of candidate pixels
                     surrounding_pixels_weighted.append(test_xyrgb + pixel_weight)
+            
+            if xy == [198.5, 103.5] or xy == [198.5, 171]:
+                print(surrounding_pixels_weighted)
             
             if len(surrounding_pixels_weighted) == 0:
                 suitable_matches = False
@@ -260,7 +273,7 @@ def generate_outlines(numpydata, edges_lat, edges_vert, edges_diag_LR, edges_dia
 
     if 2 == 2:
         for line in final_lines:
-            print(line)
+            # print(line)
             x, y = map(list, zip(*line[1]))
             plt.plot(x, y, label = "line {}".format(line[0]) )
         plt.gca().invert_yaxis()
